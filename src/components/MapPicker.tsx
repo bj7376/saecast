@@ -51,29 +51,35 @@ export default function MapPicker({ value, onChange }: Props) {
 
     map.addControl(
       new maplibregl.AttributionControl({ compact: true }),
-      "bottom-right",
+      "bottom-left",
     );
 
+    let userInteracted = false;
+
     const selectCenter = () => {
+      if (!userInteracted) return;
       const center = map.getCenter();
       onChangeRef.current({ lat: center.lat, lon: center.lng });
     };
 
-    map.on("dragend", selectCenter);
-    map.on("zoomend", selectCenter);
+    map.on("dragstart", () => {
+      userInteracted = true;
+    });
+    map.on("zoomstart", () => {
+      userInteracted = true;
+    });
     map.on("click", (event: maplibregl.MapMouseEvent) => {
+      userInteracted = true;
+      onChangeRef.current({
+        lat: event.lngLat.lat,
+        lon: event.lngLat.lng,
+      });
       map.easeTo({
         center: event.lngLat,
         duration: 220,
       });
     });
-    map.on("moveend", () => {
-      if (map.isMoving()) return;
-      const center = map.getCenter();
-      if (value || map.getZoom() !== 7.15) {
-        onChangeRef.current({ lat: center.lat, lon: center.lng });
-      }
-    });
+    map.on("moveend", selectCenter);
 
     mapRef.current = map;
 
