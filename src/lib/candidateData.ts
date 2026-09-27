@@ -28,7 +28,7 @@ export async function loadCandidateDatabase(): Promise<CandidateDatabase> {
       return (await response.json()) as CompactCandidateRow[];
     }),
   );
-  const rows = shardResponses.flat();
+  const rows = shardResponses.flat().filter((row) => index.t[row[5]] !== "rest_area");
   return {
     schemaVersion: index.v,
     count: rows.length,
