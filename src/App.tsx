@@ -560,7 +560,7 @@ function ResultsScreen({
                 </div>
 
                 <div className="heatmap-note">
-                  <span>지도 색은 {timeLabel(candidate.bestTime)}의 주변 상승기류 분포</span>
+                  <span>지도 색은 {timeLabel(candidate.bestTime)}의 반경 15 km 상승기류 분포</span>
                   <strong>핀 위치는 하루 평균 상위 {candidate.localTopPercent}%</strong>
                 </div>
 
