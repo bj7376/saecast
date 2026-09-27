@@ -536,6 +536,12 @@ function ResultsScreen({
                   <span>{accessLabel(candidate.access)}</span>
                   <span>·</span>
                   <span>{candidate.distanceKm.toFixed(1)} km</span>
+                  {candidate.islandBonusPercent > 0 && (
+                    <>
+                      <span>·</span>
+                      <span>독립산지 +{candidate.islandBonusPercent}%</span>
+                    </>
+                  )}
                   {candidate.elevation_m != null && (
                     <>
                       <span>·</span>
@@ -560,7 +566,7 @@ function ResultsScreen({
                 </div>
 
                 <div className="heatmap-note">
-                  <span>지도: {timeLabel(candidate.bestTime)} 기준 반경 30 km 상승기류</span>
+                  <span>지도: {timeLabel(candidate.bestTime)} 기준 상승기류 + 독립산지</span>
                   <strong>이 지점: 하루 평균 상위 {candidate.localTopPercent}%</strong>
                 </div>
 
