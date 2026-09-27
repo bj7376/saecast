@@ -8,8 +8,9 @@ import type {
 import type { NearbyCandidate } from "../lib/types";
 
 const TERRAIN_ZOOM = 12;
-const TERRAIN_WINDOW_RADIUS_KM = 3.0;
-const NEARBY_RADIUS_KM = 1.5;
+const LOCAL_TERRAIN_RADIUS_KM = 3.0;
+const LOCAL_COMPARE_RADIUS_KM = 1.5;
+const REGIONAL_HEATMAP_RADIUS_KM = 15.0;
 const SMOOTH_SIGMA_KM = 0.8;
 const DOWNSAMPLE = 4;
 const START_HOUR = 8;
@@ -17,10 +18,11 @@ const END_HOUR = 15;
 const THRESHOLD = 0.75;
 const WEATHER_URL = "https://api.open-meteo.com/v1/forecast";
 const TERRAIN_BASE = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium";
-const HEATMAP_SIZE = 33;
+const HEATMAP_SIZE = 65;
 
 const tileCache = new Map<string, Float32Array>();
 
+type Point = { lat: number; lon: number };
 type WeatherHour = { time: string; speed: number; direction: number };
 type CandidateWeather = Map<string, WeatherHour[]>;
 type TerrainFields = {
@@ -71,14 +73,19 @@ async function decodeTerrarium(url: string): Promise<Float32Array> {
   if (cached) return cached;
 
   const response = await fetch(url, { cache: "force-cache" });
-  if (!response.ok) throw new Error(`지형 타일을 받지 못했습니다 (${response.status})`);
+  if (!response.ok) {
+    throw new Error(`지형 타일을 받지 못했습니다 (${response.status})`);
+  }
+
   const blob = await response.blob();
   const bitmap = await createImageBitmap(blob);
   const canvas = new OffscreenCanvas(256, 256);
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("지형 이미지를 읽을 수 없습니다.");
+
   ctx.drawImage(bitmap, 0, 0);
   bitmap.close();
+
   const rgba = ctx.getImageData(0, 0, 256, 256).data;
   const out = new Float32Array(256 * 256);
 
@@ -91,11 +98,14 @@ async function decodeTerrarium(url: string): Promise<Float32Array> {
   return out;
 }
 
-async function terrainFields(candidate: NearbyCandidate): Promise<TerrainFields> {
+async function terrainFields(
+  point: Point,
+  radiusKm: number,
+): Promise<TerrainFields> {
   const z = TERRAIN_ZOOM;
-  const mpp = metersPerPixel(candidate.lat, z);
-  const [cxGlobal, cyGlobal] = latLonToGlobalPixel(candidate.lat, candidate.lon, z);
-  const radiusPx = Math.ceil((TERRAIN_WINDOW_RADIUS_KM * 1000) / mpp);
+  const mpp = metersPerPixel(point.lat, z);
+  const [cxGlobal, cyGlobal] = latLonToGlobalPixel(point.lat, point.lon, z);
+  const radiusPx = Math.ceil((radiusKm * 1000) / mpp);
 
   const gx0 = Math.floor(cxGlobal - radiusPx);
   const gx1 = Math.ceil(cxGlobal + radiusPx);
@@ -173,9 +183,9 @@ function gaussianKernel(sigma: number): Float32Array {
   let sum = 0;
 
   for (let i = -radius; i <= radius; i += 1) {
-    const v = Math.exp(-(i * i) / (2 * sigma * sigma));
-    kernel[i + radius] = v;
-    sum += v;
+    const value = Math.exp(-(i * i) / (2 * sigma * sigma));
+    kernel[i + radius] = value;
+    sum += value;
   }
 
   for (let i = 0; i < kernel.length; i += 1) kernel[i] /= sum;
@@ -264,6 +274,7 @@ function upliftField(
   fields: TerrainFields,
   speed: number,
   windDirDeg: number,
+  compareRadiusKm = LOCAL_COMPARE_RADIUS_KM,
 ): UpliftField {
   const theta = (windDirDeg * Math.PI) / 180;
   const c = Math.cos(theta);
@@ -282,13 +293,15 @@ function upliftField(
   const cy = fields.centerY / DOWNSAMPLE;
   const ix = Math.max(0, Math.min(ds.width - 1, Math.round(cx)));
   const iy = Math.max(0, Math.min(ds.height - 1, Math.round(cy)));
-  const point = smooth[iy * ds.width + ix];
-  const radiusPx = (NEARBY_RADIUS_KM * 1000) / dsMpp;
+  const pointValue = smooth[iy * ds.width + ix];
+
+  const radiusPx = (compareRadiusKm * 1000) / dsMpp;
   const r2 = radiusPx * radiusPx;
   const x0 = Math.max(0, Math.floor(cx - radiusPx));
   const x1 = Math.min(ds.width - 1, Math.ceil(cx + radiusPx));
   const y0 = Math.max(0, Math.floor(cy - radiusPx));
   const y1 = Math.min(ds.height - 1, Math.ceil(cy + radiusPx));
+
   let max = -Infinity;
   let sum = 0;
   let count = 0;
@@ -297,10 +310,10 @@ function upliftField(
   for (let y = y0; y <= y1; y += 1) {
     for (let x = x0; x <= x1; x += 1) {
       if ((x - cx) ** 2 + (y - cy) ** 2 > r2) continue;
-      const v = smooth[y * ds.width + x];
-      if (v > max) max = v;
-      if (v <= point) lessOrEqualToPoint += 1;
-      sum += v;
+      const value = smooth[y * ds.width + x];
+      if (value > max) max = value;
+      if (value <= pointValue) lessOrEqualToPoint += 1;
+      sum += value;
       count += 1;
     }
   }
@@ -312,40 +325,49 @@ function upliftField(
     centerX: cx,
     centerY: cy,
     mpp: dsMpp,
-    pointUpliftMps: point,
-    nearbyMaxUpliftMps: Number.isFinite(max) ? max : point,
-    nearbyMeanUpliftMps: count ? sum / count : point,
+    pointUpliftMps: pointValue,
+    nearbyMaxUpliftMps: Number.isFinite(max) ? max : pointValue,
+    nearbyMeanUpliftMps: count ? sum / count : pointValue,
     localPercentile: count ? (lessOrEqualToPoint / count) * 100 : 100,
   };
 }
 
 function heatmapGrid(
-  candidate: NearbyCandidate,
+  center: Point,
   field: UpliftField,
+  radiusKm: number,
 ): HeatmapGrid {
-  const radiusPx = (NEARBY_RADIUS_KM * 1000) / field.mpp;
+  const radiusPx = (radiusKm * 1000) / field.mpp;
   const values: number[] = [];
   let minValue = Infinity;
   let maxValue = -Infinity;
 
   for (let gy = 0; gy < HEATMAP_SIZE; gy += 1) {
-    const fy = field.centerY - radiusPx + (gy / (HEATMAP_SIZE - 1)) * radiusPx * 2;
+    const fy =
+      field.centerY -
+      radiusPx +
+      (gy / (HEATMAP_SIZE - 1)) * radiusPx * 2;
 
     for (let gx = 0; gx < HEATMAP_SIZE; gx += 1) {
-      const fx = field.centerX - radiusPx + (gx / (HEATMAP_SIZE - 1)) * radiusPx * 2;
+      const fx =
+        field.centerX -
+        radiusPx +
+        (gx / (HEATMAP_SIZE - 1)) * radiusPx * 2;
+
       const ix = Math.max(0, Math.min(field.width - 1, Math.round(fx)));
       const iy = Math.max(0, Math.min(field.height - 1, Math.round(fy)));
       const value = field.smooth[iy * field.width + ix];
+
       values.push(Number(value.toFixed(4)));
       if (value < minValue) minValue = value;
       if (value > maxValue) maxValue = value;
     }
   }
 
-  const latDelta = NEARBY_RADIUS_KM / 111.32;
+  const latDelta = radiusKm / 111.32;
   const lonDelta =
-    NEARBY_RADIUS_KM /
-    (111.32 * Math.max(0.1, Math.cos((candidate.lat * Math.PI) / 180)));
+    radiusKm /
+    (111.32 * Math.max(0.1, Math.cos((center.lat * Math.PI) / 180)));
 
   return {
     width: HEATMAP_SIZE,
@@ -353,10 +375,11 @@ function heatmapGrid(
     values,
     minValue: Number(minValue.toFixed(4)),
     maxValue: Number(maxValue.toFixed(4)),
-    north: candidate.lat + latDelta,
-    south: candidate.lat - latDelta,
-    east: candidate.lon + lonDelta,
-    west: candidate.lon - lonDelta,
+    north: center.lat + latDelta,
+    south: center.lat - latDelta,
+    east: center.lon + lonDelta,
+    west: center.lon - lonDelta,
+    radiusKm,
   };
 }
 
@@ -375,7 +398,10 @@ async function fetchWeather(
   });
 
   const response = await fetch(`${WEATHER_URL}?${params.toString()}`);
-  if (!response.ok) throw new Error(`날씨 예보를 받지 못했습니다 (${response.status})`);
+  if (!response.ok) {
+    throw new Error(`날씨 예보를 받지 못했습니다 (${response.status})`);
+  }
+
   const payload = await response.json();
   const list = Array.isArray(payload) ? payload : [payload];
 
@@ -387,7 +413,9 @@ async function fetchWeather(
 
   candidates.forEach((candidate, index) => {
     const hourly = list[index]?.hourly;
-    if (!hourly) throw new Error(`${candidate.name}의 시간별 예보가 없습니다.`);
+    if (!hourly) {
+      throw new Error(`${candidate.name}의 시간별 예보가 없습니다.`);
+    }
 
     const rows: WeatherHour[] = [];
     const times: string[] = hourly.time ?? [];
@@ -418,12 +446,11 @@ async function fetchWeather(
 async function analyze(
   candidates: NearbyCandidate[],
   date: string,
+  center: Point,
 ): Promise<CandidateAnalysis[]> {
   progress(0.03, "해당 날짜의 바람을 확인하고 있어요");
   const weather = await fetchWeather(candidates, date);
-  progress(0.12, "산의 방향과 경사를 살펴보고 있어요");
-
-  const terrainById = new Map<string, TerrainFields>();
+  progress(0.1, "산의 방향과 경사를 살펴보고 있어요");
 
   type PartialHourly = {
     time: string;
@@ -441,12 +468,11 @@ async function analyze(
     const candidate = candidates[i];
 
     progress(
-      0.12 + (i / Math.max(1, candidates.length)) * 0.72,
+      0.1 + (i / Math.max(1, candidates.length)) * 0.62,
       `${candidate.name} 주변 지형을 계산하고 있어요`,
     );
 
-    const fields = await terrainFields(candidate);
-    terrainById.set(candidate.id, fields);
+    const fields = await terrainFields(candidate, LOCAL_TERRAIN_RADIUS_KM);
     const rows = weather.get(candidate.id) ?? [];
 
     const hourly = rows.map((row) => {
@@ -465,7 +491,7 @@ async function analyze(
     partial.set(candidate.id, hourly);
   }
 
-  progress(0.86, "후보지들의 상승기류 조건을 정리하고 있어요");
+  progress(0.74, "후보지들의 상승기류 조건을 정리하고 있어요");
 
   const results: CandidateAnalysis[] = candidates.map((candidate) => {
     const hourly = partial.get(candidate.id) ?? [];
@@ -474,9 +500,11 @@ async function analyze(
     }
 
     const meanNearbyMax =
-      hourly.reduce((s, x) => s + x.nearbyMaxUpliftMps, 0) / hourly.length;
+      hourly.reduce((sum, row) => sum + row.nearbyMaxUpliftMps, 0) /
+      hourly.length;
     const meanLocalPercentile =
-      hourly.reduce((s, x) => s + x.localPercentile, 0) / hourly.length;
+      hourly.reduce((sum, row) => sum + row.localPercentile, 0) /
+      hourly.length;
     const best = hourly.reduce((a, b) =>
       b.nearbyMaxUpliftMps > a.nearbyMaxUpliftMps ? b : a,
     );
@@ -487,8 +515,12 @@ async function analyze(
       meanLocalPercentile,
       localTopPercent: Math.max(1, Math.round(100 - meanLocalPercentile)),
       meanNearbyMaxUpliftMps: meanNearbyMax,
-      peakNearbyMaxUpliftMps: Math.max(...hourly.map((x) => x.nearbyMaxUpliftMps)),
-      hoursGe075: hourly.filter((x) => x.nearbyMaxUpliftMps >= THRESHOLD).length,
+      peakNearbyMaxUpliftMps: Math.max(
+        ...hourly.map((row) => row.nearbyMaxUpliftMps),
+      ),
+      hoursGe075: hourly.filter(
+        (row) => row.nearbyMaxUpliftMps >= THRESHOLD,
+      ).length,
       bestTime: best.time,
       bestWindSpeedMps: best.windSpeedMps,
       bestWindDirectionDeg: best.windDirectionDeg,
@@ -518,24 +550,32 @@ async function analyze(
       });
   }
 
-  progress(0.91, "주변 상승기류 지도를 만들고 있어요");
+  progress(0.78, "15 km 범위의 상승기류 지형을 만들고 있어요");
+  const regionalTerrain = await terrainFields(
+    center,
+    REGIONAL_HEATMAP_RADIUS_KM,
+  );
 
-  for (let i = 0; i < Math.min(12, results.length); i += 1) {
+  const visibleCount = Math.min(12, results.length);
+
+  for (let i = 0; i < visibleCount; i += 1) {
     const result = results[i];
-    const fields = terrainById.get(result.id);
-    if (!fields) continue;
-
-    const bestField = upliftField(
-      fields,
+    const regionalField = upliftField(
+      regionalTerrain,
       result.bestWindSpeedMps,
       result.bestWindDirectionDeg,
+      REGIONAL_HEATMAP_RADIUS_KM,
     );
 
-    result.bestHeatmap = heatmapGrid(result, bestField);
+    result.bestHeatmap = heatmapGrid(
+      center,
+      regionalField,
+      REGIONAL_HEATMAP_RADIUS_KM,
+    );
 
     progress(
-      0.91 + ((i + 1) / Math.min(12, results.length)) * 0.08,
-      `${result.name} 주변 분포를 정리하고 있어요`,
+      0.84 + ((i + 1) / Math.max(1, visibleCount)) * 0.15,
+      `${result.name} 시간대의 지역 분포를 정리하고 있어요`,
     );
   }
 
@@ -547,7 +587,11 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   if (event.data.type !== "analyze") return;
 
   try {
-    const results = await analyze(event.data.candidates, event.data.date);
+    const results = await analyze(
+      event.data.candidates,
+      event.data.date,
+      event.data.center,
+    );
     self.postMessage({ type: "done", results });
   } catch (error) {
     self.postMessage({
