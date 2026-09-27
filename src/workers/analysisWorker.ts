@@ -28,6 +28,7 @@ type CandidateWeather = Map<string, WeatherHour[]>;
 type TerrainFields = {
   a: Float32Array;
   b: Float32Array;
+  elevation: Float32Array;
   width: number;
   height: number;
   centerX: number;
@@ -148,6 +149,7 @@ async function terrainFields(
   const height = y1 - y0 + 1;
   const a = new Float32Array(width * height);
   const b = new Float32Array(width * height);
+  const elevation = new Float32Array(width * height);
 
   for (let y = y0; y <= y1; y += 1) {
     for (let x = x0; x <= x1; x += 1) {
@@ -163,12 +165,14 @@ async function terrainFields(
       const out = (y - y0) * width + (x - x0);
       a[out] = sinSlope * Math.cos(aspect);
       b[out] = sinSlope * Math.sin(aspect);
+      elevation[out] = mosaic[c];
     }
   }
 
   return {
     a,
     b,
+    elevation,
     width,
     height,
     centerX: localCx - x0,
@@ -270,6 +274,130 @@ function gaussianBlur(
   return out;
 }
 
+function sampleGrid(
+  values: Float32Array,
+  width: number,
+  height: number,
+  centerX: number,
+  centerY: number,
+  mpp: number,
+  radiusKm: number,
+): Float32Array {
+  const radiusPx = (radiusKm * 1000) / mpp;
+  const out = new Float32Array(HEATMAP_SIZE * HEATMAP_SIZE);
+
+  for (let gy = 0; gy < HEATMAP_SIZE; gy += 1) {
+    const fy =
+      centerY -
+      radiusPx +
+      (gy / (HEATMAP_SIZE - 1)) * radiusPx * 2;
+
+    for (let gx = 0; gx < HEATMAP_SIZE; gx += 1) {
+      const fx =
+        centerX -
+        radiusPx +
+        (gx / (HEATMAP_SIZE - 1)) * radiusPx * 2;
+      const ix = Math.max(0, Math.min(width - 1, Math.round(fx)));
+      const iy = Math.max(0, Math.min(height - 1, Math.round(fy)));
+      out[gy * HEATMAP_SIZE + gx] = values[iy * width + ix];
+    }
+  }
+
+  return out;
+}
+
+function quantile(values: number[], p: number): number {
+  if (!values.length) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const index = Math.max(
+    0,
+    Math.min(sorted.length - 1, Math.round((sorted.length - 1) * p)),
+  );
+  return sorted[index];
+}
+
+function islandnessGrid(
+  fields: TerrainFields,
+  radiusKm: number,
+): Float32Array {
+  const elevationGrid = sampleGrid(
+    fields.elevation,
+    fields.width,
+    fields.height,
+    fields.centerX,
+    fields.centerY,
+    fields.mpp,
+    radiusKm,
+  );
+
+  // 30 km 반경을 65×65로 줄인 뒤, 가까운 지형과 넓은 주변 지형의
+  // 고도 차이를 이용해 평지에서 따로 솟은 산괴를 찾는다.
+  const local = gaussianBlur(
+    elevationGrid,
+    HEATMAP_SIZE,
+    HEATMAP_SIZE,
+    1.2,
+  );
+  const broad = gaussianBlur(
+    elevationGrid,
+    HEATMAP_SIZE,
+    HEATMAP_SIZE,
+    6.0,
+  );
+  const residual = new Float32Array(elevationGrid.length);
+  const valid: number[] = [];
+  const centerCell = (HEATMAP_SIZE - 1) / 2;
+
+  for (let y = 0; y < HEATMAP_SIZE; y += 1) {
+    for (let x = 0; x < HEATMAP_SIZE; x += 1) {
+      const i = y * HEATMAP_SIZE + x;
+      const value = Math.max(0, local[i] - broad[i]);
+      residual[i] = value;
+      if (Math.hypot(x - centerCell, y - centerCell) <= centerCell) {
+        valid.push(value);
+      }
+    }
+  }
+
+  const high = Math.max(1, quantile(valid, 0.95));
+  const out = new Float32Array(residual.length);
+  for (let i = 0; i < residual.length; i += 1) {
+    out[i] = Math.max(0, Math.min(1, residual[i] / high));
+  }
+  return out;
+}
+
+function sampleRegionalGridAtPoint(
+  center: Point,
+  radiusKm: number,
+  point: Point,
+  values: Float32Array,
+): number {
+  const latDelta = radiusKm / 111.32;
+  const lonDelta =
+    radiusKm /
+    (111.32 * Math.max(0.1, Math.cos((center.lat * Math.PI) / 180)));
+  const west = center.lon - lonDelta;
+  const east = center.lon + lonDelta;
+  const north = center.lat + latDelta;
+  const south = center.lat - latDelta;
+  const gx = Math.max(
+    0,
+    Math.min(
+      HEATMAP_SIZE - 1,
+      Math.round(((point.lon - west) / (east - west)) * (HEATMAP_SIZE - 1)),
+    ),
+  );
+  const gy = Math.max(
+    0,
+    Math.min(
+      HEATMAP_SIZE - 1,
+      Math.round(((north - point.lat) / (north - south)) * (HEATMAP_SIZE - 1)),
+    ),
+  );
+  return values[gy * HEATMAP_SIZE + gx] ?? 0;
+}
+
 function upliftField(
   fields: TerrainFields,
   speed: number,
@@ -336,32 +464,26 @@ function heatmapGrid(
   center: Point,
   field: UpliftField,
   radiusKm: number,
+  islandness: Float32Array,
 ): HeatmapGrid {
-  const radiusPx = (radiusKm * 1000) / field.mpp;
+  const uplift = sampleGrid(
+    field.smooth,
+    field.width,
+    field.height,
+    field.centerX,
+    field.centerY,
+    field.mpp,
+    radiusKm,
+  );
   const values: number[] = [];
   let minValue = Infinity;
   let maxValue = -Infinity;
 
-  for (let gy = 0; gy < HEATMAP_SIZE; gy += 1) {
-    const fy =
-      field.centerY -
-      radiusPx +
-      (gy / (HEATMAP_SIZE - 1)) * radiusPx * 2;
-
-    for (let gx = 0; gx < HEATMAP_SIZE; gx += 1) {
-      const fx =
-        field.centerX -
-        radiusPx +
-        (gx / (HEATMAP_SIZE - 1)) * radiusPx * 2;
-
-      const ix = Math.max(0, Math.min(field.width - 1, Math.round(fx)));
-      const iy = Math.max(0, Math.min(field.height - 1, Math.round(fy)));
-      const value = field.smooth[iy * field.width + ix];
-
-      values.push(Number(value.toFixed(4)));
-      if (value < minValue) minValue = value;
-      if (value > maxValue) maxValue = value;
-    }
+  for (let i = 0; i < uplift.length; i += 1) {
+    const value = uplift[i] * (1 + 0.25 * (islandness[i] ?? 0));
+    values.push(Number(value.toFixed(4)));
+    if (value < minValue) minValue = value;
+    if (value > maxValue) maxValue = value;
   }
 
   const latDelta = radiusKm / 111.32;
@@ -526,14 +648,40 @@ async function analyze(
       bestWindDirectionDeg: best.windDirectionDeg,
       bestUpliftMps: best.nearbyMaxUpliftMps,
       bestLocalPercentile: best.localPercentile,
+      islandness: 0,
+      islandBonusPercent: 0,
+      rankScore: meanNearbyMax,
       overallRank: 0,
       accessRank: 0,
     };
   });
 
+  progress(0.76, "독립적으로 솟은 산지를 찾고 있어요");
+  const regionalTerrain = await terrainFields(
+    center,
+    REGIONAL_HEATMAP_RADIUS_KM,
+  );
+  const regionalIslandness = islandnessGrid(
+    regionalTerrain,
+    REGIONAL_HEATMAP_RADIUS_KM,
+  );
+
+  results.forEach((result) => {
+    const islandness = sampleRegionalGridAtPoint(
+      center,
+      REGIONAL_HEATMAP_RADIUS_KM,
+      result,
+      regionalIslandness,
+    );
+    result.islandness = islandness;
+    result.islandBonusPercent = Math.round(islandness * 25);
+    result.rankScore =
+      result.meanNearbyMaxUpliftMps * (1 + 0.25 * islandness);
+  });
+
   results.sort((a, b) => {
-    if (a.meanNearbyMaxUpliftMps !== b.meanNearbyMaxUpliftMps) {
-      return b.meanNearbyMaxUpliftMps - a.meanNearbyMaxUpliftMps;
+    if (a.rankScore !== b.rankScore) {
+      return b.rankScore - a.rankScore;
     }
     return a.distanceKm - b.distanceKm;
   });
@@ -550,11 +698,7 @@ async function analyze(
       });
   }
 
-  progress(0.78, "반경 30 km 상승기류 지도를 만들고 있어요");
-  const regionalTerrain = await terrainFields(
-    center,
-    REGIONAL_HEATMAP_RADIUS_KM,
-  );
+  progress(0.82, "반경 30 km 조건 지도를 만들고 있어요");
 
   const visibleCount = Math.min(12, results.length);
 
@@ -571,11 +715,12 @@ async function analyze(
       center,
       regionalField,
       REGIONAL_HEATMAP_RADIUS_KM,
+      regionalIslandness,
     );
 
     progress(
       0.84 + ((i + 1) / Math.max(1, visibleCount)) * 0.15,
-      `${result.name} 시간대의 상승기류 지도를 만들고 있어요`,
+      `${result.name} 시간대의 조건 지도를 만들고 있어요`,
     );
   }
 
