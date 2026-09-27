@@ -29,7 +29,7 @@ export function candidatesWithinRadius(
 
 // 모바일에서 DEM 계산량이 과도해지지 않도록 실제 분석 후보를 최대 30곳으로 제한한다.
 // 공식 도보 후보는 우선 포함하고, 차량 후보는 이미 v3에서 계산한 지역 지형 percentile을
-// 중심으로 고른다. rest_area는 보조 후보라 최대 4곳만 포함한다.
+// 중심으로 고른다. rest_area는 후보 데이터에서 제외한다.
 export function buildAnalysisPool(
   nearby: NearbyCandidate[],
   maxCandidates = 30,
@@ -38,9 +38,8 @@ export function buildAnalysisPool(
     .filter((c) => c.access === "hike")
     .sort((a, b) => b.elevation_m! - a.elevation_m!);
 
-  const drives = nearby.filter((c) => c.access === "drive");
-  const nonRest = drives
-    .filter((c) => c.candidate_type !== "rest_area")
+  const drives = nearby
+    .filter((c) => c.access === "drive" && c.candidate_type !== "rest_area")
     .sort((a, b) => {
       const pa = a.terrain_percentile_3km ?? -1;
       const pb = b.terrain_percentile_3km ?? -1;
@@ -51,16 +50,6 @@ export function buildAnalysisPool(
       return a.distanceKm - b.distanceKm;
     });
 
-  const rest = drives
-    .filter((c) => c.candidate_type === "rest_area")
-    .sort((a, b) => {
-      const pa = a.terrain_percentile_3km ?? -1;
-      const pb = b.terrain_percentile_3km ?? -1;
-      if (pa !== pb) return pb - pa;
-      return a.distanceKm - b.distanceKm;
-    })
-    .slice(0, 4);
-
   const selected: NearbyCandidate[] = [];
   const seen = new Set<string>();
   const add = (c: NearbyCandidate) => {
@@ -70,8 +59,7 @@ export function buildAnalysisPool(
   };
 
   hikes.forEach(add);
-  nonRest.forEach(add);
-  rest.forEach(add);
+  drives.forEach(add);
   return selected;
 }
 
