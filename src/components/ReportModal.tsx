@@ -1,6 +1,9 @@
 import { useMemo, useRef, useState } from "react";
 import { toJpeg } from "html-to-image";
-import type { CandidateAnalysis } from "../lib/analysisTypes";
+import type {
+  CandidateAnalysis,
+  HeatmapGrid,
+} from "../lib/analysisTypes";
 import { accessLabel, typeLabel, windDirectionLabel } from "../lib/geo";
 
 type Props = {
@@ -19,10 +22,51 @@ function hourLabel(time: string) {
   return time.slice(11, 16);
 }
 
-function relativeRankLabel(candidate: CandidateAnalysis) {
-  return candidate.comparisonCount >= 5
-    ? `상위 ${candidate.topPercent}%`
-    : `${candidate.overallRank}/${candidate.comparisonCount}위`;
+function heatColor(value: number, heatmap: HeatmapGrid) {
+  const span = Math.max(0.0001, heatmap.maxValue - heatmap.minValue);
+  const n = Math.max(0, Math.min(1, (value - heatmap.minValue) / span));
+  const r = Math.round(74 + n * 165);
+  const g = Math.round(111 + n * 40);
+  const b = Math.round(136 - n * 82);
+  const alpha = 0.12 + n * 0.82;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function HeatmapMini({
+  heatmap,
+  candidateName,
+}: {
+  heatmap: HeatmapGrid;
+  candidateName: string;
+}) {
+  const cellW = 100 / heatmap.width;
+  const cellH = 100 / heatmap.height;
+
+  return (
+    <svg
+      className="report-heatmap"
+      viewBox="0 0 100 100"
+      role="img"
+      aria-label={`${candidateName} 주변 상승기류 분포`}
+    >
+      {heatmap.values.map((value, index) => {
+        const x = (index % heatmap.width) * cellW;
+        const y = Math.floor(index / heatmap.width) * cellH;
+        return (
+          <rect
+            key={index}
+            x={x}
+            y={y}
+            width={cellW + 0.2}
+            height={cellH + 0.2}
+            fill={heatColor(value, heatmap)}
+          />
+        );
+      })}
+      <circle cx="50" cy="50" r="3.1" className="heatmap-center-ring" />
+      <circle cx="50" cy="50" r="1.25" className="heatmap-center-dot" />
+    </svg>
+  );
 }
 
 function UpliftChart({ candidate }: { candidate: CandidateAnalysis }) {
@@ -45,10 +89,16 @@ function UpliftChart({ candidate }: { candidate: CandidateAnalysis }) {
       y: y(row.nearbyMaxUpliftMps),
       label: hourLabel(row.time),
     }));
+
     return {
       width,
       height,
-      path: pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" "),
+      path: pts
+        .map(
+          (p, i) =>
+            `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`,
+        )
+        .join(" "),
       thresholdY: y(0.75),
       points: pts,
     };
@@ -63,16 +113,36 @@ function UpliftChart({ candidate }: { candidate: CandidateAnalysis }) {
     >
       {thresholdY > 0 && thresholdY < height - 20 && (
         <>
-          <line className="chart-threshold" x1="0" x2={width} y1={thresholdY} y2={thresholdY} />
-          <text className="chart-threshold-label" x={width - 4} y={thresholdY - 4}>0.75 m/s</text>
+          <line
+            className="chart-threshold"
+            x1="0"
+            x2={width}
+            y1={thresholdY}
+            y2={thresholdY}
+          />
+          <text
+            className="chart-threshold-label"
+            x={width - 4}
+            y={thresholdY - 4}
+          >
+            0.75 m/s
+          </text>
         </>
       )}
-      <path className="chart-area" d={`${path} L${points.at(-1)?.x ?? width},${height - 24} L${points[0]?.x ?? 0},${height - 24} Z`} />
+      <path
+        className="chart-area"
+        d={`${path} L${points.at(-1)?.x ?? width},${height - 24} L${points[0]?.x ?? 0},${height - 24} Z`}
+      />
       <path className="chart-line" d={path} />
       {points.map((point, i) => (
         <g key={i}>
           <circle className="chart-dot" cx={point.x} cy={point.y} r="2.5" />
-          <text className="chart-hour" x={point.x} y={height - 6} textAnchor="middle">
+          <text
+            className="chart-hour"
+            x={point.x}
+            y={height - 6}
+            textAnchor="middle"
+          >
             {point.label.slice(0, 2)}
           </text>
         </g>
@@ -95,6 +165,7 @@ export default function ReportModal({
   const saveJpeg = async () => {
     if (!reportRef.current) return;
     setSaving(true);
+
     try {
       const dataUrl = await toJpeg(reportRef.current, {
         quality: 0.96,
@@ -133,12 +204,12 @@ export default function ReportModal({
             </span>
           </div>
 
-          <div className="report-score">
-            <span>주변 후보지와 비교한 상승기류 조건</span>
-            <strong>{relativeRankLabel(candidate)}</strong>
+          <div className="report-score local">
+            <span>이 지점의 주변 1.5 km 내 상대 위치</span>
+            <strong>하루 평균 상위 {candidate.localTopPercent}%</strong>
             <p>
-              맹금류 출현 확률이 아니라, 분석한 후보지들 사이에서
-              지형성 상승기류 조건이 어느 정도였는지를 나타냅니다.
+              전체 후보지 순위가 아니라, 이 후보지 주변의 같은 지형 안에서
+              핀 위치의 상승기류가 얼마나 높은 편인지 보여줍니다.
             </p>
           </div>
 
@@ -153,7 +224,10 @@ export default function ReportModal({
             </div>
             <div>
               <span>바람</span>
-              <strong>{windDirectionLabel(candidate.bestWindDirectionDeg)} {candidate.bestWindSpeedMps.toFixed(1)}</strong>
+              <strong>
+                {windDirectionLabel(candidate.bestWindDirectionDeg)}{" "}
+                {candidate.bestWindSpeedMps.toFixed(1)}
+              </strong>
             </div>
             <div>
               <span>0.75 m/s 이상</span>
@@ -161,10 +235,30 @@ export default function ReportModal({
             </div>
           </div>
 
+          {candidate.bestHeatmap && (
+            <div className="report-heatmap-block">
+              <div className="report-section-title">
+                <span>{hourLabel(candidate.bestTime)} 주변 상승기류 분포</span>
+                <small>약 3 × 3 km · 가운데가 후보지</small>
+              </div>
+              <div className="report-heatmap-wrap">
+                <HeatmapMini
+                  heatmap={candidate.bestHeatmap}
+                  candidateName={candidate.name}
+                />
+                <div className="heatmap-scale">
+                  <span>낮음 {candidate.bestHeatmap.minValue.toFixed(2)}</span>
+                  <span>m/s</span>
+                  <span>높음 {candidate.bestHeatmap.maxValue.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="report-chart-block">
             <div className="report-section-title">
               <span>시간별 상승기류</span>
-              <small>08–15시 · 후보 주변 1.5 km</small>
+              <small>08–15시 · 후보 주변 1.5 km 최대값</small>
             </div>
             <UpliftChart candidate={candidate} />
           </div>
