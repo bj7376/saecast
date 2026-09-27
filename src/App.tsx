@@ -154,7 +154,7 @@ function SoaringCompass({ onHome }: { onHome: () => void }) {
   const startAnalysis = () => {
     if (!pickedPlace || !database) return;
 
-    const nearby = candidatesWithinRadius(database.candidates, pickedPlace, 30);
+    const nearby = candidatesWithinRadius(database.candidates, pickedPlace, 15);
     const pool = buildAnalysisPool(nearby, 30);
 
     setAnalysisError(null);
@@ -206,6 +206,7 @@ function SoaringCompass({ onHome }: { onHome: () => void }) {
       type: "analyze",
       date,
       candidates: pool,
+      center: pickedPlace,
     };
 
     setLoadingProgress(0.01);
@@ -362,7 +363,7 @@ function SelectScreen({
         </div>
 
         <div className="picker-action-row">
-          <span>핀 기준 반경 30 km</span>
+          <span>핀 기준 반경 15 km</span>
           <button
             className="primary-button picker-submit"
             disabled={!ready}
@@ -443,13 +444,21 @@ function ResultsScreen({
 }) {
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const suppressObserverUntilRef = useRef(0);
 
   useEffect(() => {
     if (!selectedId) return;
-    cardRefs.current.get(selectedId)?.scrollIntoView({
+    const root = carouselRef.current;
+    const card = cardRefs.current.get(selectedId);
+    if (!root || !card) return;
+
+    suppressObserverUntilRef.current = Date.now() + 700;
+    const left =
+      card.offsetLeft - (root.clientWidth - card.clientWidth) / 2;
+
+    root.scrollTo({
+      left: Math.max(0, left),
       behavior: "smooth",
-      inline: "center",
-      block: "nearest",
     });
   }, [selectedId]);
 
@@ -458,6 +467,7 @@ function ResultsScreen({
     if (!root) return;
     const observer = new IntersectionObserver(
       (entries) => {
+        if (Date.now() < suppressObserverUntilRef.current) return;
         const best = entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
@@ -496,7 +506,7 @@ function ResultsScreen({
 
       {results.length === 0 ? (
         <div className="empty-results bottom-panel">
-          <h2>30 km 안에서 분석할 후보지를 찾지 못했어요.</h2>
+          <h2>15 km 안에서 분석할 후보지를 찾지 못했어요.</h2>
           <p>기준점을 조금 옮겨 다시 시도해 주세요.</p>
           <button className="secondary-button full" onClick={onBack}>다시 선택</button>
         </div>
