@@ -10,7 +10,7 @@ import type { NearbyCandidate } from "../lib/types";
 const TERRAIN_ZOOM = 12;
 const LOCAL_TERRAIN_RADIUS_KM = 3.0;
 const LOCAL_COMPARE_RADIUS_KM = 1.5;
-const REGIONAL_HEATMAP_RADIUS_KM = 15.0;
+const REGIONAL_HEATMAP_RADIUS_KM = 30.0;
 const SMOOTH_SIGMA_KM = 0.8;
 const DOWNSAMPLE = 4;
 const START_HOUR = 8;
@@ -448,9 +448,9 @@ async function analyze(
   date: string,
   center: Point,
 ): Promise<CandidateAnalysis[]> {
-  progress(0.03, "해당 날짜의 바람을 확인하고 있어요");
+  progress(0.03, "선택한 날짜의 바람을 확인하고 있어요");
   const weather = await fetchWeather(candidates, date);
-  progress(0.1, "산의 방향과 경사를 살펴보고 있어요");
+  progress(0.1, "지형의 경사와 방향을 계산하고 있어요");
 
   type PartialHourly = {
     time: string;
@@ -491,7 +491,7 @@ async function analyze(
     partial.set(candidate.id, hourly);
   }
 
-  progress(0.74, "후보지들의 상승기류 조건을 정리하고 있어요");
+  progress(0.74, "후보지를 비교하고 있어요");
 
   const results: CandidateAnalysis[] = candidates.map((candidate) => {
     const hourly = partial.get(candidate.id) ?? [];
@@ -550,7 +550,7 @@ async function analyze(
       });
   }
 
-  progress(0.78, "15 km 범위의 상승기류 지형을 만들고 있어요");
+  progress(0.78, "반경 30 km 상승기류 지도를 만들고 있어요");
   const regionalTerrain = await terrainFields(
     center,
     REGIONAL_HEATMAP_RADIUS_KM,
@@ -575,11 +575,11 @@ async function analyze(
 
     progress(
       0.84 + ((i + 1) / Math.max(1, visibleCount)) * 0.15,
-      `${result.name} 시간대의 지역 분포를 정리하고 있어요`,
+      `${result.name} 시간대의 상승기류 지도를 만들고 있어요`,
     );
   }
 
-  progress(1, "결과를 정리하고 있어요");
+  progress(1, "결과를 준비하고 있어요");
   return results;
 }
 
