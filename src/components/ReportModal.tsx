@@ -226,7 +226,7 @@ export default function ReportModal({
           </div>
 
           <div className="report-score local">
-            <span>주변 1.5 km에서 이 지점의 위치</span>
+            <span>주변 지형 대비</span>
             <strong>하루 평균 상위 {candidate.localTopPercent}%</strong>
             <p>
               전체 후보지 순위가 아닙니다. 이 지점의 상승기류가
@@ -236,11 +236,11 @@ export default function ReportModal({
 
           <div className="report-grid four">
             <div>
-              <span>조건이 가장 좋은 시간</span>
+              <span>좋은 시간</span>
               <strong>{hourLabel(candidate.bestTime)}</strong>
             </div>
             <div>
-              <span>그때 상승기류</span>
+              <span>상승기류</span>
               <strong>{candidate.bestUpliftMps.toFixed(2)} m/s</strong>
             </div>
             <div>
@@ -259,8 +259,8 @@ export default function ReportModal({
           {candidate.bestHeatmap && (
             <div className="report-heatmap-block">
               <div className="report-section-title">
-                <span>{hourLabel(candidate.bestTime)} 반경 30 km 종합 조건</span>
-                <small>선택 지점 기준 반경 30 km</small>
+                <span>{hourLabel(candidate.bestTime)} 지역 조건</span>
+                <small>반경 30 km</small>
               </div>
               <div className="report-heatmap-wrap">
                 <HeatmapMini
@@ -269,7 +269,7 @@ export default function ReportModal({
                 />
                 <div className="heatmap-scale">
                   <span>약함</span>
-                  <span>상승기류 + 독립산지 보너스</span>
+                  <span>붉을수록 유리</span>
                   <span>강함</span>
                 </div>
               </div>
