@@ -63,7 +63,7 @@ export default function ResultsMap({
 
     map.addControl(
       new maplibregl.AttributionControl({ compact: true }),
-      "bottom-right",
+      "bottom-left",
     );
     const bounds = new maplibregl.LngLatBounds(
       [center.lon, center.lat],
