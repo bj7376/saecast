@@ -994,7 +994,7 @@ summary {
   transition: width 220ms ease;
 }
 
-.result-rank-label {
+.local-rank-label {
   margin-left: auto;
   padding: 5px 8px;
   border-radius: 999px;
@@ -1363,4 +1363,82 @@ summary {
   .results-screen .maplibregl-ctrl-bottom-left {
     bottom: 18px;
   }
+}
+
+
+/* local-terrain result context */
+.local-rank-label {
+  margin-left: auto;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: #dfe8ce;
+  color: #30352d;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.heatmap-note {
+  margin-top: 12px;
+  padding: 10px 11px;
+  border-radius: 12px;
+  background: rgba(223, 232, 206, 0.66);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.heatmap-note span {
+  color: #696e64;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.heatmap-note strong {
+  flex: 0 0 auto;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.report-score.local {
+  background: #e5eadb;
+}
+
+.report-heatmap-block {
+  margin-top: 20px;
+}
+
+.report-heatmap-wrap {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 14px;
+  background: #eceee8;
+}
+
+.report-heatmap {
+  display: block;
+  width: 100%;
+  max-height: 170px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.heatmap-center-ring {
+  fill: rgba(247, 247, 244, 0.88);
+  stroke: #171915;
+  stroke-width: 0.9;
+}
+
+.heatmap-center-dot {
+  fill: #171915;
+}
+
+.heatmap-scale {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 2px 0;
+  color: #777b73;
+  font-size: 8px;
 }
