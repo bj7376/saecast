@@ -99,11 +99,6 @@ function Home({ onOpenCompass }: { onOpenCompass: () => void }) {
         </div>
       </header>
 
-      <section className="home-intro">
-        <p className="eyebrow">TOOLS FOR BIRDING</p>
-        <h2>오늘 필요한 것만<br />가볍게 확인하세요.</h2>
-      </section>
-
       <section className="feature-list">
         <button className="feature-card" onClick={onOpenCompass}>
           <div className="feature-card-top">
