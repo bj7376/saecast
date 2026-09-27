@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import * as maplibregl from "maplibre-gl";
-import type { CandidateAnalysis } from "../lib/analysisTypes";
+import type { CandidateAnalysis, HeatmapGrid } from "../lib/analysisTypes";
 import type { PickedPlace } from "../lib/types";
 
 type Props = {
@@ -29,6 +29,77 @@ const OSM_STYLE: maplibregl.StyleSpecification = {
     },
   ],
 };
+
+const HEATMAP_SOURCE = "uplift-heatmap-source";
+const HEATMAP_LAYER = "uplift-heatmap-layer";
+
+function heatmapDataUrl(heatmap: HeatmapGrid): string {
+  const canvas = document.createElement("canvas");
+  canvas.width = heatmap.width;
+  canvas.height = heatmap.height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return "";
+
+  const image = ctx.createImageData(heatmap.width, heatmap.height);
+  const span = Math.max(0.0001, heatmap.maxValue - heatmap.minValue);
+
+  for (let i = 0; i < heatmap.values.length; i += 1) {
+    const normalized = Math.max(
+      0,
+      Math.min(1, (heatmap.values[i] - heatmap.minValue) / span),
+    );
+
+    const r = Math.round(74 + normalized * 165);
+    const g = Math.round(111 + normalized * 40);
+    const b = Math.round(136 - normalized * 82);
+    const alpha = Math.round((0.08 + normalized * 0.78) * 255);
+    const p = i * 4;
+
+    image.data[p] = r;
+    image.data[p + 1] = g;
+    image.data[p + 2] = b;
+    image.data[p + 3] = alpha;
+  }
+
+  ctx.putImageData(image, 0, 0);
+  return canvas.toDataURL("image/png");
+}
+
+function removeHeatmap(map: maplibregl.Map) {
+  if (map.getLayer(HEATMAP_LAYER)) {
+    map.removeLayer(HEATMAP_LAYER);
+  }
+  if (map.getSource(HEATMAP_SOURCE)) {
+    map.removeSource(HEATMAP_SOURCE);
+  }
+}
+
+function addHeatmap(map: maplibregl.Map, heatmap: HeatmapGrid) {
+  removeHeatmap(map);
+  const url = heatmapDataUrl(heatmap);
+  if (!url) return;
+
+  map.addSource(HEATMAP_SOURCE, {
+    type: "image",
+    url,
+    coordinates: [
+      [heatmap.west, heatmap.north],
+      [heatmap.east, heatmap.north],
+      [heatmap.east, heatmap.south],
+      [heatmap.west, heatmap.south],
+    ],
+  });
+
+  map.addLayer({
+    id: HEATMAP_LAYER,
+    type: "raster",
+    source: HEATMAP_SOURCE,
+    paint: {
+      "raster-opacity": 0.72,
+      "raster-fade-duration": 0,
+    },
+  });
+}
 
 export default function ResultsMap({
   center,
@@ -65,6 +136,7 @@ export default function ResultsMap({
       new maplibregl.AttributionControl({ compact: true }),
       "bottom-left",
     );
+
     const bounds = new maplibregl.LngLatBounds(
       [center.lon, center.lat],
       [center.lon, center.lat],
@@ -74,12 +146,18 @@ export default function ResultsMap({
       const el = document.createElement("button");
       el.type = "button";
       el.className = "result-marker";
+
       if (candidate.overallRank <= 3) el.classList.add("top-rank");
       else if (candidate.overallRank <= 7) el.classList.add("mid-rank");
+
       const label = document.createElement("span");
       label.textContent = String(candidate.overallRank);
       el.appendChild(label);
-      el.setAttribute("aria-label", `${candidate.overallRank}위 ${candidate.name}`);
+      el.setAttribute(
+        "aria-label",
+        `${candidate.overallRank}번 후보 ${candidate.name}`,
+      );
+
       el.addEventListener("click", (event) => {
         event.stopPropagation();
         onSelectRef.current(candidate.id);
@@ -109,6 +187,7 @@ export default function ResultsMap({
     return () => {
       markerRefs.current.forEach((marker) => marker.remove());
       markerRefs.current.clear();
+      removeHeatmap(map);
       map.remove();
       mapRef.current = null;
     };
@@ -123,11 +202,26 @@ export default function ResultsMap({
     });
 
     const candidate = byId.get(selectedId);
-    if (candidate) {
+    if (!candidate) return;
+
+    const show = () => {
+      if (candidate.bestHeatmap) {
+        addHeatmap(map, candidate.bestHeatmap);
+      } else {
+        removeHeatmap(map);
+      }
+
       map.easeTo({
         center: [candidate.lon, candidate.lat],
-        duration: 350,
+        zoom: Math.max(map.getZoom(), 12.2),
+        duration: 380,
       });
+    };
+
+    if (map.isStyleLoaded()) {
+      show();
+    } else {
+      map.once("load", show);
     }
   }, [selectedId, byId]);
 
