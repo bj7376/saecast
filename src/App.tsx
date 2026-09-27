@@ -334,7 +334,7 @@ function SelectScreen({
 
       <div className="map-instruction">
         <strong>탐조를 어디로 가실 건가요?</strong>
-        <span>지도를 움직여 가운데 핀을 탐조할 곳에 놓아주세요.</span>
+        <span>지도를 움직여 핀을 탐조할 곳에 놓으세요.</span>
       </div>
 
       <div className="bottom-panel location-picker-panel">
@@ -363,7 +363,7 @@ function SelectScreen({
         </div>
 
         <div className="picker-action-row">
-          <span>선택 지점에서 30 km</span>
+          <span>반경 30 km</span>
           <button
             className="primary-button picker-submit"
             disabled={!ready}
@@ -406,7 +406,7 @@ function LoadingScreen({
         <div className="loading-orbit" aria-hidden="true">
           <div className="orbit-dot" />
         </div>
-        <p className="eyebrow">ANALYZING {candidateCount} PLACES</p>
+        <p className="eyebrow">{candidateCount}곳 분석 중</p>
         <h1>맹금류가 상승기류를<br />타기 좋은 곳을 찾고 있어요</h1>
         <p className="loading-copy">{copy}</p>
         <div className="progress-track" aria-label={`분석 진행 ${Math.round(progress * 100)}%`}>
@@ -415,7 +415,7 @@ function LoadingScreen({
       </div>
 
       <p className="loading-footnote">
-        출현 확률이 아니라 지형과 바람으로 상승기류 조건을 비교합니다.
+        맹금류 출현 확률이 아니라 상승기류 조건을 비교합니다.
       </p>
     </section>
   );
@@ -499,7 +499,7 @@ function ResultsScreen({
         <IconButton aria-label="다시 선택" onClick={onBack}>←</IconButton>
         <div className="header-title">
           <span>{date}</span>
-          <small>{analyzedCount}곳 분석 · {results.length}곳 표시</small>
+          <small>{analyzedCount}곳 분석</small>
         </div>
         <IconButton aria-label="도움말" onClick={onInfo}>?</IconButton>
       </header>
@@ -527,7 +527,7 @@ function ResultsScreen({
                 <div className="result-card-head">
                   <span className="candidate-index">{candidate.overallRank}</span>
                   <span>{typeLabel(candidate.candidate_type)}</span>
-                  <span className="local-rank-label">주변 1.5 km 기준 상위 {candidate.localTopPercent}%</span>
+                  <span className="local-rank-label">주변 상위 {candidate.localTopPercent}%</span>
                 </div>
 
                 <h2>{candidate.name}</h2>
@@ -552,22 +552,22 @@ function ResultsScreen({
 
                 <div className="score-real">
                   <div>
-                    <span>평균 상승기류</span>
+                    <span>평균</span>
                     <strong>{candidate.meanNearbyMaxUpliftMps.toFixed(2)} <small>m/s</small></strong>
                   </div>
                   <div>
-                    <span>가장 좋은 시간</span>
+                    <span>좋은 시간</span>
                     <strong>{timeLabel(candidate.bestTime)}</strong>
                   </div>
                   <div>
-                    <span>그때 바람</span>
+                    <span>바람</span>
                     <strong>{windDirectionLabel(candidate.bestWindDirectionDeg)} {candidate.bestWindSpeedMps.toFixed(1)}</strong>
                   </div>
                 </div>
 
                 <div className="heatmap-note">
-                  <span>지도: {timeLabel(candidate.bestTime)} 기준 상승기류 + 독립산지</span>
-                  <strong>이 지점: 하루 평균 상위 {candidate.localTopPercent}%</strong>
+                  <span>지도는 {timeLabel(candidate.bestTime)} 기준</span>
+                  <strong>붉을수록 유리</strong>
                 </div>
 
                 {candidate.id === selectedId && (
@@ -578,7 +578,7 @@ function ResultsScreen({
                       onReport();
                     }}
                   >
-                    상승기류 리포트 보기
+                    자세히 보기
                   </button>
                 )}
               </div>
