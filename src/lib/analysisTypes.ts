@@ -1,5 +1,17 @@
 import type { NearbyCandidate } from "./types";
 
+export type HeatmapGrid = {
+  width: number;
+  height: number;
+  values: number[];
+  minValue: number;
+  maxValue: number;
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+};
+
 export type HourlyUplift = {
   time: string;
   windSpeedMps: number;
@@ -7,13 +19,13 @@ export type HourlyUplift = {
   pointUpliftMps: number;
   nearbyMaxUpliftMps: number;
   nearbyMeanUpliftMps: number;
-  percentile: number;
+  localPercentile: number;
 };
 
 export type CandidateAnalysis = NearbyCandidate & {
   hourly: HourlyUplift[];
-  meanPercentile: number;
-  topPercent: number;
+  meanLocalPercentile: number;
+  localTopPercent: number;
   meanNearbyMaxUpliftMps: number;
   peakNearbyMaxUpliftMps: number;
   hoursGe075: number;
@@ -21,9 +33,10 @@ export type CandidateAnalysis = NearbyCandidate & {
   bestWindSpeedMps: number;
   bestWindDirectionDeg: number;
   bestUpliftMps: number;
+  bestLocalPercentile: number;
+  bestHeatmap?: HeatmapGrid;
   overallRank: number;
   accessRank: number;
-  comparisonCount: number;
 };
 
 export type WorkerRequest = {
