@@ -36,6 +36,9 @@ export type CandidateAnalysis = NearbyCandidate & {
   bestUpliftMps: number;
   bestLocalPercentile: number;
   bestHeatmap?: HeatmapGrid;
+  islandness: number;
+  islandBonusPercent: number;
+  rankScore: number;
   overallRank: number;
   accessRank: number;
 };
