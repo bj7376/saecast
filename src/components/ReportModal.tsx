@@ -221,6 +221,7 @@ export default function ReportModal({
             <h1>{candidate.name}</h1>
             <span>
               {accessLabel(candidate.access)} · {typeLabel(candidate.candidate_type)} · 선택 지점에서 {candidate.distanceKm.toFixed(1)} km
+              {candidate.islandBonusPercent > 0 ? ` · 독립산지 +${candidate.islandBonusPercent}%` : ""}
             </span>
           </div>
 
@@ -258,7 +259,7 @@ export default function ReportModal({
           {candidate.bestHeatmap && (
             <div className="report-heatmap-block">
               <div className="report-section-title">
-                <span>{hourLabel(candidate.bestTime)} 반경 30 km 상승기류</span>
+                <span>{hourLabel(candidate.bestTime)} 반경 30 km 종합 조건</span>
                 <small>선택 지점 기준 반경 30 km</small>
               </div>
               <div className="report-heatmap-wrap">
@@ -268,7 +269,7 @@ export default function ReportModal({
                 />
                 <div className="heatmap-scale">
                   <span>약함</span>
-                  <span>색이 진할수록 강함</span>
+                  <span>상승기류 + 독립산지 보너스</span>
                   <span>강함</span>
                 </div>
               </div>
