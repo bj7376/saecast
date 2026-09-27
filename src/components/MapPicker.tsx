@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import type { PickedPlace } from "../lib/types";
 
 type Props = {
@@ -41,7 +41,7 @@ export default function MapPicker({ value, onChange }: Props) {
       "top-right",
     );
 
-    map.on("click", (event) => {
+    map.on("click", (event: maplibregl.MapMouseEvent) => {
       onChangeRef.current({
         lat: event.lngLat.lat,
         lon: event.lngLat.lng,
