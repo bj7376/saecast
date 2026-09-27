@@ -10,6 +10,7 @@ export type HeatmapGrid = {
   south: number;
   east: number;
   west: number;
+  radiusKm: number;
 };
 
 export type HourlyUplift = {
@@ -43,6 +44,7 @@ export type WorkerRequest = {
   type: "analyze";
   date: string;
   candidates: NearbyCandidate[];
+  center: { lat: number; lon: number };
 };
 
 export type WorkerProgress = {
