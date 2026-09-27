@@ -22,12 +22,19 @@ function hourLabel(time: string) {
   return time.slice(11, 16);
 }
 
-function heatColor(value: number, heatmap: HeatmapGrid) {
-  const span = Math.max(0.0001, heatmap.maxValue - heatmap.minValue);
-  const n = Math.max(0, Math.min(1, (value - heatmap.minValue) / span));
-  const r = Math.round(74 + n * 165);
-  const g = Math.round(111 + n * 40);
-  const b = Math.round(136 - n * 82);
+function heatColor(value: number, low: number, high: number) {
+  const n = Math.max(0, Math.min(1, (value - low) / Math.max(0.0001, high - low)));
+  const stop1 = Math.min(1, n / 0.5);
+  const stop2 = Math.max(0, (n - 0.5) / 0.5);
+  const r = n < 0.5
+    ? Math.round(57 + (229 - 57) * stop1)
+    : Math.round(229 + (215 - 229) * stop2);
+  const g = n < 0.5
+    ? Math.round(106 + (197 - 106) * stop1)
+    : Math.round(197 + (72 - 197) * stop2);
+  const b = n < 0.5
+    ? Math.round(177 + (92 - 177) * stop1)
+    : Math.round(92 + (55 - 92) * stop2);
   const alpha = 0.12 + n * 0.82;
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
@@ -41,28 +48,41 @@ function HeatmapMini({
 }) {
   const cellW = 100 / heatmap.width;
   const cellH = 100 / heatmap.height;
+  const sorted = [...heatmap.values].sort((a, b) => a - b);
+  const q = (p: number) =>
+    sorted[Math.max(0, Math.min(sorted.length - 1, Math.round((sorted.length - 1) * p)))];
+  const low = q(0.05);
+  const high = Math.max(low + 0.0001, q(0.95));
 
   return (
     <svg
       className="report-heatmap"
       viewBox="0 0 100 100"
       role="img"
-      aria-label={`${candidateName} 주변 상승기류 분포`}
+      aria-label={`${candidateName} 선택 지역 반경 15 km 상승기류 분포`}
     >
-      {heatmap.values.map((value, index) => {
-        const x = (index % heatmap.width) * cellW;
-        const y = Math.floor(index / heatmap.width) * cellH;
-        return (
-          <rect
-            key={index}
-            x={x}
-            y={y}
-            width={cellW + 0.2}
-            height={cellH + 0.2}
-            fill={heatColor(value, heatmap)}
-          />
-        );
-      })}
+      <defs>
+        <clipPath id="regional-heatmap-circle">
+          <circle cx="50" cy="50" r="50" />
+        </clipPath>
+      </defs>
+      <g clipPath="url(#regional-heatmap-circle)">
+        {heatmap.values.map((value, index) => {
+          const x = (index % heatmap.width) * cellW;
+          const y = Math.floor(index / heatmap.width) * cellH;
+          return (
+            <rect
+              key={index}
+              x={x}
+              y={y}
+              width={cellW + 0.25}
+              height={cellH + 0.25}
+              fill={heatColor(value, low, high)}
+            />
+          );
+        })}
+      </g>
+      <circle cx="50" cy="50" r="49.4" className="heatmap-boundary-ring" />
       <circle cx="50" cy="50" r="3.1" className="heatmap-center-ring" />
       <circle cx="50" cy="50" r="1.25" className="heatmap-center-dot" />
     </svg>
@@ -238,8 +258,8 @@ export default function ReportModal({
           {candidate.bestHeatmap && (
             <div className="report-heatmap-block">
               <div className="report-section-title">
-                <span>{hourLabel(candidate.bestTime)} 주변 상승기류 분포</span>
-                <small>약 3 × 3 km · 가운데가 후보지</small>
+                <span>{hourLabel(candidate.bestTime)} 지역 상승기류 분포</span>
+                <small>선택 지점 기준 반경 15 km</small>
               </div>
               <div className="report-heatmap-wrap">
                 <HeatmapMini
@@ -247,9 +267,9 @@ export default function ReportModal({
                   candidateName={candidate.name}
                 />
                 <div className="heatmap-scale">
-                  <span>낮음 {candidate.bestHeatmap.minValue.toFixed(2)}</span>
-                  <span>m/s</span>
-                  <span>높음 {candidate.bestHeatmap.maxValue.toFixed(2)}</span>
+                  <span>낮은 구간</span>
+                  <span>색이 진할수록 강함</span>
+                  <span>높은 구간</span>
                 </div>
               </div>
             </div>
