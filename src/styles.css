@@ -1442,3 +1442,10 @@ summary {
   color: #777b73;
   font-size: 8px;
 }
+
+
+.heatmap-boundary-ring {
+  fill: none;
+  stroke: rgba(23, 25, 21, 0.28);
+  stroke-width: 0.8;
+}
