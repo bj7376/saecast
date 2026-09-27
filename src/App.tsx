@@ -89,7 +89,7 @@ function Home({ onOpenCompass }: { onOpenCompass: () => void }) {
         <div className="brand-mark">새</div>
         <div>
           <h1>새상청</h1>
-          <p>탐조를 조금 더 잘 준비하기 위한 도구들</p>
+          <p>탐조 준비에 필요한 도구들</p>
         </div>
       </header>
 
@@ -102,14 +102,14 @@ function Home({ onOpenCompass }: { onOpenCompass: () => void }) {
           <div>
             <h3>상승기류 나침반</h3>
             <p>
-              날짜와 지역을 고르면, 주변에서 지형성 상승기류가
-              만들어지기 좋은 탐조 후보지를 비교합니다.
+              날짜와 지역을 고르면, 주변 탐조 후보지의
+              상승기류 조건을 비교합니다.
             </p>
           </div>
         </button>
 
         <div className="future-card">
-          <span>새 기능은 여기에 하나씩 추가됩니다.</span>
+          <span>다른 기능도 준비 중입니다.</span>
         </div>
       </section>
 
@@ -154,7 +154,7 @@ function SoaringCompass({ onHome }: { onHome: () => void }) {
   const startAnalysis = () => {
     if (!pickedPlace || !database) return;
 
-    const nearby = candidatesWithinRadius(database.candidates, pickedPlace, 15);
+    const nearby = candidatesWithinRadius(database.candidates, pickedPlace, 30);
     const pool = buildAnalysisPool(nearby, 30);
 
     setAnalysisError(null);
@@ -334,7 +334,7 @@ function SelectScreen({
 
       <div className="map-instruction">
         <strong>탐조를 어디로 가실 건가요?</strong>
-        <span>지도를 움직여 가운데 핀을 지역에 맞춰주세요.</span>
+        <span>지도를 움직여 가운데 핀을 탐조할 곳에 놓아주세요.</span>
       </div>
 
       <div className="bottom-panel location-picker-panel">
@@ -342,7 +342,7 @@ function SelectScreen({
 
         <div className="picker-fields">
           <div className="picker-field">
-            <span>가운데 핀</span>
+            <span>선택 위치</span>
             <strong>
               {pickedPlace
                 ? `${pickedPlace.lat.toFixed(3)}, ${pickedPlace.lon.toFixed(3)}`
@@ -363,7 +363,7 @@ function SelectScreen({
         </div>
 
         <div className="picker-action-row">
-          <span>핀 기준 반경 15 km</span>
+          <span>선택 지점에서 30 km</span>
           <button
             className="primary-button picker-submit"
             disabled={!ready}
@@ -407,7 +407,7 @@ function LoadingScreen({
           <div className="orbit-dot" />
         </div>
         <p className="eyebrow">ANALYZING {candidateCount} PLACES</p>
-        <h1>맹금류가 상승기류를<br />타기 좋은 곳을 찾는 중...</h1>
+        <h1>맹금류가 상승기류를<br />타기 좋은 곳을 찾고 있어요</h1>
         <p className="loading-copy">{copy}</p>
         <div className="progress-track" aria-label={`분석 진행 ${Math.round(progress * 100)}%`}>
           <span style={{ width: `${Math.max(2, progress * 100)}%` }} />
@@ -506,8 +506,8 @@ function ResultsScreen({
 
       {results.length === 0 ? (
         <div className="empty-results bottom-panel">
-          <h2>15 km 안에서 분석할 후보지를 찾지 못했어요.</h2>
-          <p>기준점을 조금 옮겨 다시 시도해 주세요.</p>
+          <h2>30 km 안에서 탐조 후보지를 찾지 못했어요.</h2>
+          <p>지도를 조금 옮겨 다시 찾아보세요.</p>
           <button className="secondary-button full" onClick={onBack}>다시 선택</button>
         </div>
       ) : (
@@ -527,7 +527,7 @@ function ResultsScreen({
                 <div className="result-card-head">
                   <span className="candidate-index">{candidate.overallRank}</span>
                   <span>{typeLabel(candidate.candidate_type)}</span>
-                  <span className="local-rank-label">주변 1.5 km 내 상위 {candidate.localTopPercent}%</span>
+                  <span className="local-rank-label">주변 1.5 km 기준 상위 {candidate.localTopPercent}%</span>
                 </div>
 
                 <h2>{candidate.name}</h2>
@@ -560,8 +560,8 @@ function ResultsScreen({
                 </div>
 
                 <div className="heatmap-note">
-                  <span>지도 색은 {timeLabel(candidate.bestTime)}의 반경 15 km 상승기류 분포</span>
-                  <strong>핀 위치는 하루 평균 상위 {candidate.localTopPercent}%</strong>
+                  <span>지도: {timeLabel(candidate.bestTime)} 기준 반경 30 km 상승기류</span>
+                  <strong>이 지점: 하루 평균 상위 {candidate.localTopPercent}%</strong>
                 </div>
 
                 {candidate.id === selectedId && (
@@ -572,7 +572,7 @@ function ResultsScreen({
                       onReport();
                     }}
                   >
-                    날짜별 상승기류 리포트
+                    상승기류 리포트 보기
                   </button>
                 )}
               </div>
@@ -581,7 +581,7 @@ function ResultsScreen({
 
           <div className="carousel-hint">
             <span>{selected?.name ?? ""}</span>
-            <span>카드를 넘겨 비교해보세요 →</span>
+            <span>옆으로 넘겨 다른 후보지 보기 →</span>
           </div>
         </div>
       )}
