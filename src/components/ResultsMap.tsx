@@ -40,25 +40,50 @@ function heatmapDataUrl(heatmap: HeatmapGrid): string {
   const ctx = canvas.getContext("2d");
   if (!ctx) return "";
 
+  const sorted = [...heatmap.values].sort((a, b) => a - b);
+  const q = (p: number) =>
+    sorted[Math.max(0, Math.min(sorted.length - 1, Math.round((sorted.length - 1) * p)))];
+  const low = q(0.05);
+  const high = Math.max(low + 0.0001, q(0.95));
+
   const image = ctx.createImageData(heatmap.width, heatmap.height);
-  const span = Math.max(0.0001, heatmap.maxValue - heatmap.minValue);
+  const cx = (heatmap.width - 1) / 2;
+  const cy = (heatmap.height - 1) / 2;
+  const radius = Math.min(cx, cy);
 
   for (let i = 0; i < heatmap.values.length; i += 1) {
+    const x = i % heatmap.width;
+    const y = Math.floor(i / heatmap.width);
+    const p = i * 4;
+    const distance = Math.hypot(x - cx, y - cy);
+
+    if (distance > radius) {
+      image.data[p + 3] = 0;
+      continue;
+    }
+
     const normalized = Math.max(
       0,
-      Math.min(1, (heatmap.values[i] - heatmap.minValue) / span),
+      Math.min(1, (heatmap.values[i] - low) / (high - low)),
     );
 
-    const r = Math.round(74 + normalized * 165);
-    const g = Math.round(111 + normalized * 40);
-    const b = Math.round(136 - normalized * 82);
-    const alpha = Math.round((0.08 + normalized * 0.78) * 255);
-    const p = i * 4;
+    const stop1 = Math.min(1, normalized / 0.5);
+    const stop2 = Math.max(0, (normalized - 0.5) / 0.5);
+
+    const r = normalized < 0.5
+      ? Math.round(57 + (229 - 57) * stop1)
+      : Math.round(229 + (215 - 229) * stop2);
+    const g = normalized < 0.5
+      ? Math.round(106 + (197 - 106) * stop1)
+      : Math.round(197 + (72 - 197) * stop2);
+    const b = normalized < 0.5
+      ? Math.round(177 + (92 - 177) * stop1)
+      : Math.round(92 + (55 - 92) * stop2);
 
     image.data[p] = r;
     image.data[p + 1] = g;
     image.data[p + 2] = b;
-    image.data[p + 3] = alpha;
+    image.data[p + 3] = Math.round((0.1 + normalized * 0.72) * 255);
   }
 
   ctx.putImageData(image, 0, 0);
@@ -95,8 +120,9 @@ function addHeatmap(map: maplibregl.Map, heatmap: HeatmapGrid) {
     type: "raster",
     source: HEATMAP_SOURCE,
     paint: {
-      "raster-opacity": 0.72,
+      "raster-opacity": 0.82,
       "raster-fade-duration": 0,
+      "raster-resampling": "linear",
     },
   });
 }
@@ -211,11 +237,24 @@ export default function ResultsMap({
         removeHeatmap(map);
       }
 
-      map.easeTo({
-        center: [candidate.lon, candidate.lat],
-        zoom: Math.max(map.getZoom(), 12.2),
-        duration: 380,
-      });
+      if (candidate.bestHeatmap) {
+        map.fitBounds(
+          [
+            [candidate.bestHeatmap.west, candidate.bestHeatmap.south],
+            [candidate.bestHeatmap.east, candidate.bestHeatmap.north],
+          ],
+          {
+            padding: { top: 72, right: 24, bottom: 230, left: 24 },
+            maxZoom: 11,
+            duration: 380,
+          },
+        );
+      } else {
+        map.easeTo({
+          center: [candidate.lon, candidate.lat],
+          duration: 380,
+        });
+      }
     };
 
     if (map.isStyleLoaded()) {
