@@ -47,7 +47,7 @@ export default function InfoSheet({
               살펴보고, 이런 상승기류가 만들어지기 좋은 장소를 서로 비교합니다.
             </p>
             <div className="how-steps">
-              <div><span>1</span><p>선택한 핀에서 약 30 km 안에 있는, 실제로 갈 수 있는 산과 전망 지점을 찾습니다.</p></div>
+              <div><span>1</span><p>선택한 핀에서 약 15 km 안에 있는, 실제로 갈 수 있는 산과 전망 지점을 찾습니다.</p></div>
               <div><span>2</span><p>각 장소 주변의 산비탈이 어느 방향을 향하고 얼마나 가파른지 살펴봅니다.</p></div>
               <div><span>3</span><p>그날 예보된 바람이 산비탈을 만나 얼마나 위로 밀려 올라갈지 계산합니다.</p></div>
               <div><span>4</span><p>후보지를 정렬하고, 각 후보지 안에서는 주변 1.5 km 지형과 비교해 그 핀의 위치가 얼마나 좋은지도 보여줍니다.</p></div>
@@ -80,7 +80,8 @@ export default function InfoSheet({
               <summary>출처 및 계산 세부사항</summary>
               <div className="license-copy">
                 <p>기본식: 바람 세기 × sin(사면 경사) × 바람과 사면 방향의 정렬 정도</p>
-                <p>후보지 주변 약 1.5 km를 함께 보고, 약 0.8 km 규모로 지형성 상승기류를 부드럽게 묶어 비교합니다.</p>
+                <p>후보지 평가는 주변 약 1.5 km를 함께 보고, 약 0.8 km 규모로 지형성 상승기류를 부드럽게 묶어 비교합니다.</p>
+                <p>지도 히트맵은 선택한 지역의 반경 15 km 전체를 보여줍니다. 선택한 후보지의 가장 좋은 시간대 풍향·풍속을 이 지역 지형에 적용해 능선과 사면의 상대적인 패턴을 보여주는 참고 시각화입니다.</p>
                 <p>브라우저에서 빠르게 계산하기 위해 상승기류 격자를 약 4픽셀 단위로 묶은 뒤 smoothing합니다.</p>
                 <p>OpenStreetMap: © OpenStreetMap contributors, ODbL 1.0</p>
                 <p>SSRS: NatLabRockies / NREL, BSD 3-Clause</p>
