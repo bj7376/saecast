@@ -7,12 +7,29 @@ type Props = {
   onChange: (place: PickedPlace) => void;
 };
 
-const STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
+const OSM_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: "raster",
+      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: "© OpenStreetMap contributors",
+    },
+  },
+  layers: [
+    {
+      id: "osm",
+      type: "raster",
+      source: "osm",
+    },
+  ],
+};
 
 export default function MapPicker({ value, onChange }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
-  const markerRef = useRef<maplibregl.Marker | null>(null);
   const onChangeRef = useRef(onChange);
 
   useEffect(() => {
@@ -24,10 +41,11 @@ export default function MapPicker({ value, onChange }: Props) {
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: STYLE_URL,
-      center: [127.75, 36.3],
-      zoom: 6.2,
+      style: OSM_STYLE,
+      center: value ? [value.lon, value.lat] : [127.75, 36.3],
+      zoom: value ? 10 : 7.15,
       minZoom: 5.2,
+      maxZoom: 18,
       attributionControl: false,
     });
 
@@ -36,45 +54,41 @@ export default function MapPicker({ value, onChange }: Props) {
       "bottom-right",
     );
 
-    map.addControl(
-      new maplibregl.NavigationControl({ showCompass: false }),
-      "top-right",
-    );
+    const selectCenter = () => {
+      const center = map.getCenter();
+      onChangeRef.current({ lat: center.lat, lon: center.lng });
+    };
 
+    map.on("dragend", selectCenter);
+    map.on("zoomend", selectCenter);
     map.on("click", (event: maplibregl.MapMouseEvent) => {
-      onChangeRef.current({
-        lat: event.lngLat.lat,
-        lon: event.lngLat.lng,
+      map.easeTo({
+        center: event.lngLat,
+        duration: 220,
       });
+    });
+    map.on("moveend", () => {
+      if (map.isMoving()) return;
+      const center = map.getCenter();
+      if (value || map.getZoom() !== 7.15) {
+        onChangeRef.current({ lat: center.lat, lon: center.lng });
+      }
     });
 
     mapRef.current = map;
 
     return () => {
-      markerRef.current?.remove();
       map.remove();
       mapRef.current = null;
     };
   }, []);
 
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    if (!value) {
-      markerRef.current?.remove();
-      markerRef.current = null;
-      return;
-    }
-
-    if (!markerRef.current) {
-      markerRef.current = new maplibregl.Marker()
-        .setLngLat([value.lon, value.lat])
-        .addTo(map);
-    } else {
-      markerRef.current.setLngLat([value.lon, value.lat]);
-    }
-  }, [value]);
-
-  return <div ref={containerRef} className="map-canvas" />;
+  return (
+    <>
+      <div ref={containerRef} className="map-canvas" />
+      <div className={`map-center-pin ${value ? "active" : ""}`} aria-hidden="true">
+        <span />
+      </div>
+    </>
+  );
 }
