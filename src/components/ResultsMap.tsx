@@ -10,7 +10,25 @@ type Props = {
   onSelect: (id: string) => void;
 };
 
-const STYLE_URL = "https://tiles.openfreemap.org/styles/liberty";
+const OSM_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: "raster",
+      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: "© OpenStreetMap contributors",
+    },
+  },
+  layers: [
+    {
+      id: "osm",
+      type: "raster",
+      source: "osm",
+    },
+  ],
+};
 
 export default function ResultsMap({
   center,
@@ -37,7 +55,7 @@ export default function ResultsMap({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: STYLE_URL,
+      style: OSM_STYLE,
       center: [center.lon, center.lat],
       zoom: 8,
       attributionControl: false,
@@ -47,11 +65,6 @@ export default function ResultsMap({
       new maplibregl.AttributionControl({ compact: true }),
       "bottom-right",
     );
-    map.addControl(
-      new maplibregl.NavigationControl({ showCompass: false }),
-      "top-right",
-    );
-
     const bounds = new maplibregl.LngLatBounds(
       [center.lon, center.lat],
       [center.lon, center.lat],
