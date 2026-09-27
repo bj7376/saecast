@@ -59,7 +59,7 @@ export default function InfoSheet({
           </div>
         ) : (
           <div className="sheet-copy">
-            <h2>무엇을 사용하나요?</h2>
+            <h2>어떻게 계산하나요?</h2>
             <p>
               선택한 날짜의 풍향·풍속 예보와 고도 자료를 사용합니다.
               지형의 경사와 방향을 구한 뒤, 바람이 어느 비탈을 타고 오르기 좋은지 계산합니다.
@@ -75,7 +75,7 @@ export default function InfoSheet({
             </dl>
 
             <details>
-              <summary>출처 및 계산 세부사항</summary>
+              <summary>계산 방식과 출처</summary>
               <div className="license-copy">
                 <p>기본식: 바람 세기 × sin(비탈 경사) × 바람이 비탈로 불어드는 정도</p>
                 <p>후보지는 주변 약 1.5 km를 함께 보고, 약 0.8 km 범위로 값을 부드럽게 평균내 비교합니다.</p>
