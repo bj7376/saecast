@@ -72,7 +72,7 @@ export default function InfoSheet({
               <div><dt>지형</dt><dd>AWS Open Data의 Terrarium 고도 타일</dd></div>
               <div><dt>장소</dt><dd>OpenStreetMap + 한국등산트레킹지원센터 100대명산+</dd></div>
               <div><dt>접근성 참고</dt><dd>전국주차장정보표준데이터</dd></div>
-              <div><dt>지도</dt><dd>OpenFreeMap / OpenMapTiles / OpenStreetMap</dd></div>
+              <div><dt>지도</dt><dd>MapLibre GL JS + OpenStreetMap 표준 지도</dd></div>
             </dl>
 
             <details>
