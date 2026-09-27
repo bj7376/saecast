@@ -61,12 +61,6 @@ function timeLabel(time: string) {
   return time.slice(11, 16);
 }
 
-function relativeRankLabel(candidate: CandidateAnalysis) {
-  return candidate.comparisonCount >= 5
-    ? `상위 ${candidate.topPercent}%`
-    : `${candidate.overallRank}/${candidate.comparisonCount}위`;
-}
-
 export default function App() {
   const [path, setPath] = useState(routePath());
 
@@ -160,7 +154,7 @@ function SoaringCompass({ onHome }: { onHome: () => void }) {
   const startAnalysis = () => {
     if (!pickedPlace || !database) return;
 
-    const nearby = candidatesWithinRadius(database.candidates, pickedPlace, 60);
+    const nearby = candidatesWithinRadius(database.candidates, pickedPlace, 30);
     const pool = buildAnalysisPool(nearby, 30);
 
     setAnalysisError(null);
@@ -368,7 +362,7 @@ function SelectScreen({
         </div>
 
         <div className="picker-action-row">
-          <span>핀 기준 반경 60 km</span>
+          <span>핀 기준 반경 30 km</span>
           <button
             className="primary-button picker-submit"
             disabled={!ready}
@@ -495,14 +489,14 @@ function ResultsScreen({
         <IconButton aria-label="다시 선택" onClick={onBack}>←</IconButton>
         <div className="header-title">
           <span>{date}</span>
-          <small>{analyzedCount}곳 분석 · TOP {results.length}</small>
+          <small>{analyzedCount}곳 분석 · {results.length}곳 표시</small>
         </div>
         <IconButton aria-label="도움말" onClick={onInfo}>?</IconButton>
       </header>
 
       {results.length === 0 ? (
         <div className="empty-results bottom-panel">
-          <h2>60 km 안에서 분석할 후보지를 찾지 못했어요.</h2>
+          <h2>30 km 안에서 분석할 후보지를 찾지 못했어요.</h2>
           <p>기준점을 조금 옮겨 다시 시도해 주세요.</p>
           <button className="secondary-button full" onClick={onBack}>다시 선택</button>
         </div>
@@ -523,7 +517,7 @@ function ResultsScreen({
                 <div className="result-card-head">
                   <span className="candidate-index">{candidate.overallRank}</span>
                   <span>{typeLabel(candidate.candidate_type)}</span>
-                  <span className="result-rank-label">{relativeRankLabel(candidate)}</span>
+                  <span className="local-rank-label">주변 1.5 km 내 상위 {candidate.localTopPercent}%</span>
                 </div>
 
                 <h2>{candidate.name}</h2>
@@ -553,6 +547,11 @@ function ResultsScreen({
                     <span>그때 바람</span>
                     <strong>{windDirectionLabel(candidate.bestWindDirectionDeg)} {candidate.bestWindSpeedMps.toFixed(1)}</strong>
                   </div>
+                </div>
+
+                <div className="heatmap-note">
+                  <span>지도 색은 {timeLabel(candidate.bestTime)}의 주변 상승기류 분포</span>
+                  <strong>핀 위치는 하루 평균 상위 {candidate.localTopPercent}%</strong>
                 </div>
 
                 {candidate.id === selectedId && (
