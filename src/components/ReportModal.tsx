@@ -59,7 +59,7 @@ function HeatmapMini({
       className="report-heatmap"
       viewBox="0 0 100 100"
       role="img"
-      aria-label={`${candidateName} 선택 지역 반경 15 km 상승기류 분포`}
+      aria-label={`${candidateName} 선택 지역 반경 30 km 상승기류 분포`}
     >
       <defs>
         <clipPath id="regional-heatmap-circle">
@@ -220,22 +220,22 @@ export default function ReportModal({
             <p>{formatDate(date)}</p>
             <h1>{candidate.name}</h1>
             <span>
-              {accessLabel(candidate.access)} · {typeLabel(candidate.candidate_type)} · 기준점에서 {candidate.distanceKm.toFixed(1)} km
+              {accessLabel(candidate.access)} · {typeLabel(candidate.candidate_type)} · 선택 지점에서 {candidate.distanceKm.toFixed(1)} km
             </span>
           </div>
 
           <div className="report-score local">
-            <span>이 지점의 주변 1.5 km 내 상대 위치</span>
+            <span>주변 1.5 km에서 이 지점의 위치</span>
             <strong>하루 평균 상위 {candidate.localTopPercent}%</strong>
             <p>
-              전체 후보지 순위가 아니라, 이 후보지 주변의 같은 지형 안에서
-              핀 위치의 상승기류가 얼마나 높은 편인지 보여줍니다.
+              전체 후보지 순위가 아닙니다. 이 지점의 상승기류가
+              바로 주변 지형보다 얼마나 강한 편인지 나타냅니다.
             </p>
           </div>
 
           <div className="report-grid four">
             <div>
-              <span>가장 좋은 시간</span>
+              <span>조건이 가장 좋은 시간</span>
               <strong>{hourLabel(candidate.bestTime)}</strong>
             </div>
             <div>
@@ -258,8 +258,8 @@ export default function ReportModal({
           {candidate.bestHeatmap && (
             <div className="report-heatmap-block">
               <div className="report-section-title">
-                <span>{hourLabel(candidate.bestTime)} 지역 상승기류 분포</span>
-                <small>선택 지점 기준 반경 15 km</small>
+                <span>{hourLabel(candidate.bestTime)} 반경 30 km 상승기류</span>
+                <small>선택 지점 기준 반경 30 km</small>
               </div>
               <div className="report-heatmap-wrap">
                 <HeatmapMini
@@ -267,9 +267,9 @@ export default function ReportModal({
                   candidateName={candidate.name}
                 />
                 <div className="heatmap-scale">
-                  <span>낮은 구간</span>
+                  <span>약함</span>
                   <span>색이 진할수록 강함</span>
-                  <span>높은 구간</span>
+                  <span>강함</span>
                 </div>
               </div>
             </div>
@@ -284,8 +284,8 @@ export default function ReportModal({
           </div>
 
           <p className="report-footnote">
-            선택한 날짜의 100 m 풍향·풍속과 지형의 경사·방향을 이용해 계산한 참고 정보입니다.
-            실제 국지풍과 맹금류의 이동 경로는 다를 수 있으며, 출현을 예측하거나 보장하지 않습니다.
+            선택한 날짜의 100 m 풍향·풍속과 지형의 경사·방향으로 계산한 참고값입니다.
+            실제 국지풍이나 맹금류의 이동 경로와는 다를 수 있습니다.
           </p>
         </div>
       </div>
