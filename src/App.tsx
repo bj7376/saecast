@@ -337,25 +337,25 @@ function SelectScreen({
         <IconButton aria-label="도움말" onClick={onInfo}>?</IconButton>
       </header>
 
-      <div className="prompt-card">
-        <p className="eyebrow">1 · 장소와 날짜</p>
-        <h1>탐조를 어디로<br />가실 건가요?</h1>
-        <p>지도에서 대략적인 지역을 한 번 눌러주세요.</p>
+      <div className="map-instruction">
+        <strong>탐조를 어디로 가실 건가요?</strong>
+        <span>지도를 움직여 가운데 핀을 지역에 맞춰주세요.</span>
       </div>
 
-      <div className="bottom-panel">
+      <div className="bottom-panel location-picker-panel">
         {error && <div className="error-banner">{error}</div>}
-        <div className="selection-summary">
-          <div>
-            <span>지역</span>
+
+        <div className="picker-fields">
+          <div className="picker-field">
+            <span>가운데 핀</span>
             <strong>
               {pickedPlace
-                ? `${pickedPlace.lat.toFixed(4)}, ${pickedPlace.lon.toFixed(4)}`
-                : "지도에서 핀을 찍어주세요"}
+                ? `${pickedPlace.lat.toFixed(3)}, ${pickedPlace.lon.toFixed(3)}`
+                : "지도를 움직여 선택"}
             </strong>
           </div>
 
-          <label>
+          <label className="picker-field date-field">
             <span>날짜</span>
             <input
               type="date"
@@ -367,17 +367,20 @@ function SelectScreen({
           </label>
         </div>
 
-        <button
-          className="primary-button full"
-          disabled={!ready}
-          onClick={onAnalyze}
-        >
-          {!candidateDbReady
-            ? "후보지 데이터 불러오는 중..."
-            : pickedPlace
-              ? "상승기류 좋은 곳 찾기"
-              : "먼저 지역을 찍어주세요"}
-        </button>
+        <div className="picker-action-row">
+          <span>핀 기준 반경 60 km</span>
+          <button
+            className="primary-button picker-submit"
+            disabled={!ready}
+            onClick={onAnalyze}
+          >
+            {!candidateDbReady
+              ? "데이터 준비 중..."
+              : pickedPlace
+                ? "이 지역에서 찾기"
+                : "지역을 선택해주세요"}
+          </button>
+        </div>
       </div>
     </section>
   );
