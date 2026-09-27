@@ -7,11 +7,11 @@
 - 새상청 홈 → 상승기류 나침반
 - 지도에서 기준 지역 선택
 - 오늘부터 7일 이내 날짜 선택
-- `candidates-index.json` + 분할된 웹용 경량 후보지 데이터에서 반경 60 km 후보 검색
+- `candidates-index.json` + 분할된 웹용 경량 후보지 데이터에서 반경 30 km 후보 검색
 - 모바일 계산량을 고려해 최대 30곳 분석
   - 100대명산+ 도보 후보 우선 포함
   - 차량 후보는 v3의 주변 지형 percentile을 이용해 분석 pool 구성
-  - 도로 쉼터는 보조 후보로 최대 4곳
+  - 고속도로 휴게소(rest_area)는 후보에서 제외
 - Open-Meteo Forecast API
   - 100 m 풍속 / 풍향
   - 선택 날짜 08:00–15:00 KST
@@ -23,7 +23,8 @@
   - `wind_speed × sin(slope) × max(0, cos(aspect - wind_direction))`
   - 약 0.8 km smoothing
   - 후보 주변 1.5 km 최대 상승기류 사용
-- 시간별 후보 percentile → 하루 평균 percentile로 상대 순위
+- 후보지 주변 1.5 km에서 지점별 상대 위치(percentile) 계산
+- 선택 지역 반경 30 km의 상승기류 히트맵 표시
 - 결과 지도 핀 ↔ 모바일 카드 스와이프 동기화
 - 실제 시간별 상승기류 리포트
 - JPG 저장
