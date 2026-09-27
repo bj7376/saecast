@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from "react";
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import type { CandidateAnalysis } from "../lib/analysisTypes";
 import type { PickedPlace } from "../lib/types";
 
