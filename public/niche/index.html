@@ -121,7 +121,7 @@ button.red{background:var(--red);color:#fff;box-shadow:0 3px 0 #7a1f1a}
   </div>
   <div id="me" class="wood">
     <div><div id="status"></div><div class="help" id="help"></div></div>
-    <div><h4>내 손 · 뽑은 카드</h4><div id="tray"></div></div>
+    <div><h4 id="trayTitle">내 손 · 뽑은 카드</h4><div id="tray"></div></div>
     <div class="btns">
       <button id="bDraw">새 덱에서 2장 뽑기</button>
       <button id="bSkip">앉히지 않고 모두 버리기</button>
@@ -213,10 +213,10 @@ function drawTwo(){const out=[];for(let k=0;k<2;k++){if(!S.deck.length){if(!S.ma
 
 /* ---------- actions ---------- */
 function placeCard(pi,b,s){S.slots[s]={bird:b,owner:pi};log(`${S.players[pi].name}: ${BIRDS[b][0]} → ${LAYERS[s>>1]}`)}
-function endTurn(){S.market.push(...S.drawn);S.drawn=[];S.sel=null;S.taken++;
+function endTurn(){if(S.drawn.length)log(`${cur().name}: ${S.drawn.map(b=>BIRDS[b][0]).join(", ")} → 버림 더미`);S.market.push(...S.drawn);S.drawn=[];S.sel=null;S.taken++;
  if(S.taken>=S.players.length){roundEnd();return}S.turn=(S.turn+1)%S.players.length;render();next()}
 function doDraw(){S.drawn=drawTwo();if(!S.drawn.length){log(`${cur().name}: 뽑을 카드가 없어 차례를 넘김`);endTurn();return}
- log(`${cur().name}: 새 덱에서 ${S.drawn.length}장 뽑음`);render();
+ log(`${cur().name}: 새 덱에서 ${S.drawn.map(b=>BIRDS[b][0]).join(", ")} 뽑음`);render();
  if(!S.drawn.some(b=>legal(b).length))setStatus("앉힐 자리가 없습니다. 모두 버리세요.")}
 function withdraw(pi,s){const b=S.slots[s].bird;S.slots[s]=null;S.extinct.push(b);log(`${S.players[pi].name}: ${BIRDS[b][0]} 철회 → 지역 절멸`,"r");endTurn()}
 
@@ -226,7 +226,7 @@ function onSlot(s){if(!S.sel)return;const {b,from}=S.sel;
  placeCard(0,b,s);if(from=="market")S.drawn=[];endTurn()}
 function myTurn(){return !S.busy&&!S.over&&!cur().pc}
 $("#bDraw").onclick=()=>{if(myTurn()&&!S.drawn.length)doDraw()};
-$("#bSkip").onclick=()=>{if(myTurn()&&S.drawn.length){log("나: 앉히지 않고 모두 버림");endTurn()}};
+$("#bSkip").onclick=()=>{if(myTurn()&&S.drawn.length)endTurn()};
 $("#bCancel").onclick=()=>{S.sel=null;render()};
 function setStatus(t,h){$("#status").textContent=t;if(h!==undefined)$("#help").innerHTML=h}
 
@@ -249,14 +249,15 @@ function render(){
  dk.onclick=()=>$("#bDraw").onclick();
  $("#hawkDeck").innerHTML=[0,1,2,3].map(i=>`<div class="back hawk" style="top:${-i*2}px;left:${i}px">매</div>`).join("")+'<span class="cnt">4</span>';
  const mk=$("#market");mk.innerHTML=S.market.length?"":'<span class="empty">비어 있음</span>';
- S.market.forEach(b=>{const ok=myTurn()&&!S.drawn.length&&legal(b).length;mk.insertAdjacentHTML("beforeend",cardHTML(b,(ok?"pick":myTurn()&&!S.drawn.length?"dead":"")+(S.sel&&S.sel.b==b?" sel":"")))});
+ S.market.forEach(b=>{const ok=myTurn()&&!S.drawn.length&&legal(b).length;mk.insertAdjacentHTML("beforeend",cardHTML(b,(ok?"pick":myTurn()&&!S.drawn.length?"dead":"")+(S.sel&&S.sel.b==b&&(S.sel.from=="market")?" sel":"")))});
  mk.querySelectorAll(".card.pick").forEach(e=>e.onclick=()=>{const b=+e.dataset.id;S.sel=S.sel&&S.sel.b==b?null:{b,from:"market"};render()});
  $("#extinct").innerHTML=S.extinct.map(b=>`<span>${BIRDS[b][0]}</span>`).join("")||'<span style="text-decoration:none;background:none;color:#e9dfc866">없음</span>';
- const tr=$("#tray");tr.innerHTML=S.drawn.length?"":'<span class="empty">덱을 눌러 2장을 뽑거나, 버림 더미에서 1장을 고르세요</span>';
- S.drawn.forEach(b=>{const ok=myTurn()&&legal(b).length;tr.insertAdjacentHTML("beforeend",cardHTML(b,(ok?"pick":"dead")+(S.sel&&S.sel.b==b?" sel":"")))});
+ const tr=$("#tray");tr.innerHTML=S.drawn.length?"":`<span class="empty">${cur().pc?cur().name+"이(가) 행동을 고르는 중":"덱을 눌러 2장을 뽑거나, 버림 더미에서 1장을 고르세요"}</span>`;
+ $("#trayTitle").textContent=cur().pc?`${cur().name}의 손 · 모두에게 공개`:"내 손 · 뽑은 카드";
+ S.drawn.forEach(b=>{const ok=myTurn()&&legal(b).length;tr.insertAdjacentHTML("beforeend",cardHTML(b,(cur().pc?"":ok?"pick":"dead")+(S.sel&&S.sel.b==b?" sel":"")))});
  tr.querySelectorAll(".card.pick").forEach(e=>e.onclick=()=>{const b=+e.dataset.id;S.sel=S.sel&&S.sel.b==b?null:{b,from:"drawn"};render()});
  $("#bDraw").disabled=!(myTurn()&&!S.drawn.length&&!S.sel&&(S.deck.length||S.market.length));
- $("#bSkip").disabled=!(myTurn()&&S.drawn.length);$("#bCancel").disabled=!S.sel;
+ $("#bSkip").disabled=!(myTurn()&&S.drawn.length);$("#bCancel").disabled=!(S.sel&&myTurn());
  if(myTurn()){
   if(S.sel)setStatus(`${BIRDS[S.sel.b][0]}을(를) 앉힐 칸을 고르세요`,"나무에서 빛나는 칸을 누르면 앉습니다. 뽑은 카드 중 남은 것은 버림 더미로 갑니다.");
   else if(S.drawn.length)setStatus("뽑은 카드 중 1장을 고르세요","남은 카드는 공개된 버림 더미로 가서 누구나 가져갈 수 있습니다.");
@@ -275,10 +276,10 @@ function ai(pi){const base=value(S.slots,pi),opts=[];
  S.slots.forEach((x,s)=>{if(x&&x.owner==pi){const t=S.slots.slice();t[s]=null;opts.push({k:"w",s,v:value(t,pi)-base-0.4})}});
  opts.forEach(o=>o.v+=Math.random()*.1);opts.sort((a,b)=>b.v-a.v);const o=opts[0];
  if(!o){log(`${cur().name}: 할 수 있는 행동이 없어 넘김`);endTurn();return}
- if(o.k=="m"){S.market.splice(S.market.indexOf(o.b),1);log(`${cur().name}: 버림 더미에서 ${BIRDS[o.b][0]}을(를) 가져옴`);placeCard(pi,o.b,o.s);endTurn()}
+ if(o.k=="m"){S.sel={b:o.b,from:"market"};setStatus(`${cur().name}: 버림 더미에서 ${BIRDS[o.b][0]}을(를) 가져갑니다`,"");render();setTimeout(()=>{S.sel=null;S.market.splice(S.market.indexOf(o.b),1);log(`${cur().name}: 버림 더미에서 ${BIRDS[o.b][0]}을(를) 가져옴`);placeCard(pi,o.b,o.s);endTurn()},1200)}
  else if(o.k=="w")withdraw(pi,o.s);
- else{doDraw();render();setTimeout(()=>{let bb=null;S.drawn.forEach(b=>{const p=bestPlace(b,pi);if(p&&(!bb||p.v>bb.v))bb={...p,b}});
-  if(bb&&bb.v>-0.2){S.drawn.splice(S.drawn.indexOf(bb.b),1);placeCard(pi,bb.b,bb.s)}else if(S.drawn.length)log(`${cur().name}: 앉히지 않고 모두 버림`);endTurn()},800)}}
+ else{doDraw();setStatus(`${cur().name}: 새 덱에서 ${S.drawn.length}장을 뽑았습니다`,"");render();setTimeout(()=>{let bb=null;S.drawn.forEach(b=>{const p=bestPlace(b,pi);if(p&&(!bb||p.v>bb.v))bb={...p,b}});
+  if(bb&&bb.v>-0.2){S.sel={b:bb.b,from:"drawn"};setStatus(`${cur().name}: ${BIRDS[bb.b][0]}을(를) 고릅니다`,"");render();setTimeout(()=>{S.sel=null;S.drawn.splice(S.drawn.indexOf(bb.b),1);placeCard(pi,bb.b,bb.s);endTurn()},1000)}else endTurn()},1500)}}
 
 /* ---------- round end ---------- */
 function roundEnd(){S.busy=true;render();setStatus("모두 행동을 마쳤습니다. 매 카드를 공개합니다…","");
