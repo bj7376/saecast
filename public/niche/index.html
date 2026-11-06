@@ -13,7 +13,7 @@ html,body{margin:0}
 body{min-width:1280px;font-family:"Noto Sans KR",sans-serif;color:var(--ink);
 background:#5a3d27 repeating-linear-gradient(92deg,#5e402a 0 14px,#57391f 14px 22px,#61442d 22px 41px,#55381f 41px 46px)}
 body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 40%,transparent 40%,#0007)}
-#table{position:relative;width:1240px;margin:18px auto 30px;display:grid;grid-template-columns:600px 1fr;gap:18px}
+#table{position:relative;width:1240px;margin:18px auto 30px;display:grid;grid-template-columns:600px 622px;gap:18px}
 .wood{background:#3b281a;border-radius:6px;box-shadow:inset 0 0 0 2px #2a1c11,0 6px 14px #0008}
 .paper{background:var(--paper);border-radius:4px;box-shadow:0 3px 0 #d6cbb0,0 8px 18px #0006;background-image:radial-gradient(#0000000a 1px,transparent 1px);background-size:5px 5px}
 h4{margin:0 0 8px;font-family:"Noto Serif KR",serif;font-size:13px;letter-spacing:.04em;color:#e9dfc8}
@@ -45,7 +45,7 @@ h4{margin:0 0 8px;font-family:"Noto Serif KR",serif;font-size:13px;letter-spacin
 @keyframes hit{0%,100%{background:transparent}25%,60%{background:#b8352e55}}
 .slot .card{position:absolute;inset:0}
 .ownchip{position:absolute;top:-9px;right:-9px;z-index:3}
-.ev{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:4;font-size:11px;padding:4px 9px;display:none}
+.ev{white-space:nowrap;position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:4;font-size:11px;padding:4px 9px;display:none}
 .slot.evict:hover .ev{display:block}
 .yield{position:absolute;left:4px;top:4px;z-index:3;background:#fffdf5e6;border-radius:9px;padding:1px 6px;font-size:11px;font-weight:700}
 /* cards */
@@ -81,20 +81,33 @@ h4{margin:0 0 8px;font-family:"Noto Serif KR",serif;font-size:13px;letter-spacin
 #market{display:flex;flex-wrap:wrap;gap:8px;min-height:150px;padding:8px;border:2px dashed #e9dfc844;border-radius:6px}
 .empty{color:#e9dfc888;font-size:13px;margin:auto}
 /* food board */
-#foodBoard{padding:12px 14px}
+#foodBoard{padding:14px 16px}
 #foods{display:flex;gap:10px}
-.fgrp{flex:1;border-radius:6px;padding:8px;background:#0000000a;border:1px solid #6b5a3e33}
+.fgrp{border-radius:6px;padding:10px;background:#0000000a;border:1px solid #6b5a3e33}
 .fgrp .ttl{display:flex;align-items:center;gap:6px;font-family:"Noto Serif KR",serif;font-weight:900;font-size:14px;margin-bottom:6px}
 .fgrp .ttl small{font-family:"Noto Sans KR";font-weight:400;font-size:11px;color:#6b5a3e;margin-left:auto}
-.fslots{display:flex;gap:6px}
-.fslot{flex:1;height:62px;border:2px dashed #3a2e1c55;border-radius:6px;background:#fbf7ec88;position:relative;display:flex;align-items:center;justify-content:center;font-size:11px;color:#8a7a5a}
-.chip{display:flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#2b2a26;padding:0 4px}
-.chip svg.b{width:36px;height:30px}
+.fslots{display:flex;gap:8px}
+.fslot{flex:1;height:118px;border:2px dashed #3a2e1c55;border-radius:6px;background:#fbf7ec88;position:relative;display:flex;align-items:center;justify-content:center;font-size:11px;color:#8a7a5a}
+.chip{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px;font-weight:700;color:#2b2a26}
+.chip svg.b{width:72px;height:54px}
+.chip .who{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:400}
+.fslot.evict:hover .ev{display:block}
+.fslot .yield{left:auto;right:4px}
+#foods{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.15fr) minmax(0,2fr) minmax(0,1.15fr);gap:8px}
+.fgrp .ttl{white-space:nowrap}
+#side{min-width:0}
+.handc{display:flex;align-items:center;gap:6px;margin-left:8px;font-size:11px;color:#6b6252}
+.handc .mini{width:44px;height:60px;border-radius:4px;overflow:hidden;box-shadow:0 1px 3px #0005;background:var(--paper2)}
+.handc .mini.bk{background:#6f9a5e}
+.keepbtn{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);font-size:11px;padding:3px 8px;z-index:4;white-space:nowrap}
+.keepbtn.on{background:var(--gold);color:#fff;box-shadow:0 3px 0 #8a6a20}
+.cwrap{position:relative}
+.htag{position:absolute;top:-10px;left:6px;z-index:4;background:#2f4a36;color:#f1ead6;font-size:10px;padding:1px 6px;border-radius:8px}
 #log{padding:12px 14px;font-size:12.5px;line-height:1.55;height:170px;overflow:auto;background:#fbf7ec;background-image:repeating-linear-gradient(transparent 0 18.5px,#c9d4e0 18.5px 19.5px);border-radius:3px;box-shadow:0 6px 14px #0006}
 #log p{margin:0}
 #log .r{color:var(--red);font-weight:700}
 #me{grid-column:1/3;display:grid;grid-template-columns:260px 1fr 330px;gap:16px;padding:14px}
-#tray{display:flex;gap:12px;align-items:center;min-height:156px;padding:6px 12px;border:2px dashed #e9dfc844;border-radius:6px}
+#tray{display:flex;gap:14px;align-items:center;min-height:172px;padding:6px 12px;border:2px dashed #e9dfc844;border-radius:6px}
 #status{font-family:"Noto Serif KR",serif;font-weight:700;font-size:16px;color:#f1ead6;margin-bottom:10px;min-height:44px}
 .help{font-size:12px;color:#d6c9ab;line-height:1.6}
 .btns{display:flex;flex-direction:column;gap:8px}
@@ -131,7 +144,7 @@ button.red{background:var(--red);color:#fff;box-shadow:0 3px 0 #7a1f1a}
     <div><h4 id="trayTitle">내 손 · 뽑은 카드</h4><div id="tray"></div></div>
     <div class="btns">
       <button id="bDraw">새 덱에서 2장 뽑기</button>
-      <button id="bSkip">앉히지 않고 모두 버리기</button>
+      <button id="bSkip">앉히지 않고 차례 마치기</button>
       <button id="bCancel">선택 취소</button>
     </div>
   </div>
@@ -142,7 +155,9 @@ button.red{background:var(--red);color:#fff;box-shadow:0 3px 0 #7a1f1a}
   <ol>
     <li>새 카드는 <b>10종 1장씩</b>, 모든 플레이어가 함께 돌려 씁니다.</li>
     <li>새는 나무의 <b>서식지 칸</b>과 먹이 보드의 <b>먹이 칸</b>을 하나씩 차지해야 앉습니다.</li>
-    <li>내 차례엔 셋 중 하나: <b>덱 2장 뽑아 1장 앉히기</b>(나머지는 버림 더미로) · <b>버림 더미에서 1장 가져와 앉히기</b> · 나무 위의 새 1마리 <b>내쫓기</b>(버림 더미로).</li>
+    <li>내 차례엔 하나: <b>덱 2장 뽑기</b> · <b>버림 더미에서 1장 가져와 앉히기</b> · 새 1마리 <b>내쫓기</b>(새 덱에 섞임).</li>
+    <li>2장을 뽑으면 1장을 앉히고 나머지는 버림 더미로 갑니다. 고른 카드는 언제든 취소할 수 있습니다.</li>
+    <li>뽑은 뒤에도 <b>내쫓기</b>를 고를 수 있지만, 그러면 뽑은 카드는 새 덱으로 돌아가 섞입니다.</li>
     <li>모두 한 번씩 하면 <b>매</b> 1장 공개 — 그 층의 새는 <b>새 덱</b>으로 돌아갑니다.</li>
     <li>먹이를 <b>혼자 먹으면 알 2</b>, 둘이 나눠 먹으면 <b>각 알 1</b>.</li>
     <li>누군가 <b>새 덱에서 뽑지 못하면</b>, 그 라운드를 마치고 게임이 끝납니다.</li>
@@ -212,9 +227,9 @@ let S;
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 function newGame(npc){
  const ps=[{name:"나",pc:false}];for(let i=1;i<=npc;i++)ps.push({name:"PC "+i,pc:true});
- ps.forEach((p,i)=>{p.color=COLORS[i];p.eggs=0});
+ ps.forEach((p,i)=>{p.color=COLORS[i];p.eggs=0;p.hand=null});
  S={deck:shuffle([...Array(10).keys()]),market:[],birds:[],players:ps,round:1,start:0,turn:0,taken:0,
-   drawn:[],sel:null,selH:null,busy:false,over:false,lastRound:false};
+   drawn:[],sel:null,selH:null,keep:null,busy:false,over:false,lastRound:false};
  $("#log").innerHTML="";log("게임 시작 — 시작 플레이어: 나");next();
 }
 const cur=()=>S.players[S.turn];
@@ -226,96 +241,116 @@ const canPlace=b=>placements(b).length>0;
 const eggsOf=(birds,x)=>birds.filter(y=>FSLOT[y.f]==FSLOT[x.f]).length==1?2:1;
 function value(birds,pi){const n=S.players.length;let v=0;birds.forEach(x=>v+=eggsOf(birds,x)*.75*(x.owner==pi?1:-1/(n-1)));return v}
 const names=a=>a.map(b=>BIRDS[b][0]).join(", ");
+const nm=b=>BIRDS[b][0];
 
-/* ---------- actions ---------- */
-function place(pi,b,h,f){S.birds.push({bird:b,owner:pi,h,f});log(`${S.players[pi].name}: ${BIRDS[b][0]} → ${LAYERS[HSLOT[h]]} · ${FOODS[FSLOT[f]]}`)}
-function endTurn(){if(S.drawn.length)log(`${cur().name}: ${names(S.drawn)} → 버림 더미`);S.market.push(...S.drawn);S.drawn=[];S.sel=null;S.selH=null;S.taken++;
+/* ---------- rules ---------- */
+function confiscate(){if(S.deck.length>2)return;const got=[];
+ S.players.forEach(p=>{if(p.hand!=null){got.push(`${p.name}의 ${nm(p.hand)}`);S.deck.push(p.hand);p.hand=null}});
+ if(got.length){shuffle(S.deck);log(`새 덱이 2장 이하 → 손패 압수: ${got.join(", ")}`,"r")}}
+function place(pi,b,h,f){S.birds.push({bird:b,owner:pi,h,f});log(`${S.players[pi].name}: ${nm(b)} → ${LAYERS[HSLOT[h]]} · ${FOODS[FSLOT[f]]}`)}
+function takeCard(pi,b,from){const p=S.players[pi];
+ if(from=="market")S.market.splice(S.market.indexOf(b),1);else if(from=="hand")p.hand=null;else S.drawn.splice(S.drawn.indexOf(b),1)}
+function endTurn(){const p=cur();
+ if(S.keep){const {b,from}=S.keep;if(from=="drawn"){S.drawn.splice(S.drawn.indexOf(b),1);if(p.hand!=null){S.market.push(p.hand);log(`${p.name}: 손패 ${nm(p.hand)} → 버림 더미`)}p.hand=b;log(`${p.name}: ${nm(b)}을(를) 손패로 킵`)}}
+ if(S.drawn.length)log(`${p.name}: ${names(S.drawn)} → 버림 더미`);S.market.push(...S.drawn);
+ S.drawn=[];S.sel=null;S.selH=null;S.keep=null;S.taken++;confiscate();
  if(S.taken>=S.players.length){roundEnd();return}S.turn=(S.turn+1)%S.players.length;next()}
 function doDraw(){
  if(!S.deck.length){S.lastRound=true;log(`${cur().name}: 새 덱이 비어 뽑을 수 없음 → 이번 라운드가 마지막!`,"r");endTurn();return false}
- S.drawn=S.deck.splice(-2).reverse();log(`${cur().name}: 새 덱에서 ${names(S.drawn)} 뽑음`);render();return true}
-function evict(pi,x){S.birds.splice(S.birds.indexOf(x),1);S.market.push(x.bird);
- log(`${S.players[pi].name}: ${S.players[x.owner].name}의 ${BIRDS[x.bird][0]}을(를) 내쫓음 → 버림 더미`,"r");endTurn()}
+ S.drawn=S.deck.splice(-2).reverse();log(`${cur().name}: 새 덱에서 ${names(S.drawn)} 뽑음`);confiscate();render();return true}
+function evict(pi,x){if(S.drawn.length){S.deck.push(...S.drawn);shuffle(S.deck);log(`${S.players[pi].name}: 뽑은 ${names(S.drawn)}을(를) 새 덱에 반납하고 섞음`);S.drawn=[]}
+ S.keep=null;S.birds.splice(S.birds.indexOf(x),1);S.deck.push(x.bird);shuffle(S.deck);
+ log(`${S.players[pi].name}: ${S.players[x.owner].name}의 ${nm(x.bird)}을(를) 내쫓음 → 새 덱에 섞음`,"r");endTurn()}
 
 /* ---------- human ---------- */
 const myTurn=()=>!S.busy&&!S.over&&!cur().pc;
 const idle=()=>myTurn()&&!S.drawn.length&&!S.sel;
-function finishPick(h,f){const {b,from}=S.sel;
- if(from=="market")S.market.splice(S.market.indexOf(b),1);else S.drawn.splice(S.drawn.indexOf(b),1);
- place(0,b,h,f);endTurn()}
+const canEvict=()=>myTurn();
+function finishPick(h,f){const {b,from}=S.sel;takeCard(0,b,from);if(S.keep&&S.keep.b==b)S.keep=null;place(0,b,h,f);endTurn()}
 function onHab(h){const opts=placements(S.sel.b).filter(o=>o.h==h);if(opts.length==1){finishPick(h,opts[0].f);return}S.selH=h;render()}
-function onFood(f){finishPick(S.selH,f)}
 $("#bDraw").onclick=()=>{if(idle())doDraw()};
 $("#bSkip").onclick=()=>{if(myTurn()&&S.drawn.length)endTurn()};
 $("#bCancel").onclick=()=>{if(S.selH!=null)S.selH=null;else S.sel=null;render()};
 const setStatus=(t,h="")=>{$("#status").textContent=t;$("#help").innerHTML=h};
+function askEvict(x){S.sel=null;S.selH=null;const extra=S.drawn.length?`\n뽑은 ${names(S.drawn)}은(는) 새 덱으로 돌아가 섞입니다.`:"";
+ if(confirm(`${S.players[x.owner].name}의 ${nm(x.bird)}을(를) 내쫓을까요? 이번 차례 행동을 모두 씁니다.${extra}`))evict(0,x);else render()}
 
 /* ---------- render ---------- */
+function handMini(p,i){if(p.hand==null)return '<span class="handc">손패 없음</span>';
+ return `<span class="handc"><span class="mini">${cardHTML(p.hand).replace('class="card','style="transform:scale(.42);transform-origin:0 0" class="card')}</span>손패</span>`}
 function render(){
  $("#opps").innerHTML=`<div class="logo paper"><b>NICHE!</b><span>새들의 자리를 찾아라</span><span>라운드 ${S.round}${S.lastRound?" · 마지막":""}</span><a href="/">← 새상청으로</a></div>`+
   S.players.map((p,i)=>`<div class="mat paper ${i==S.turn&&!S.over?"active":""}">${meeple(p.color)}<div><div class="nm">${p.name}</div><div class="sub">나무 위의 새 ${S.birds.filter(x=>x.owner==i).length}마리${i==S.start?" · 시작":""}</div></div><div class="eggs">${egg}${p.eggs}</div></div>`).join("");
  const mine=myTurn()&&S.sel,opts=mine?placements(S.sel.b):[];
  const habOK=S.selH==null?new Set(opts.map(o=>o.h)):new Set(),foodOK=new Set(opts.filter(o=>o.h==S.selH).map(o=>o.f));
+ const ev=canEvict();
  let t=treeBG(),h=0;
  for(let l=0;l<4;l++){t+=`<div class="row" id="R${l}" style="top:${10+l*155}px"><div class="rowlab">${LAYERS[l]}<small>${LSUB[l]} · ${l==1||l==2?1:2}칸</small></div><div class="slots">`;
   for(;h<6&&HSLOT[h]==l;h++){const x=S.birds.find(y=>y.h==h),cls=habOK.has(h)?"can":S.selH==h?"picked":"";
-   t+=`<div class="slot ${cls} ${x&&idle()?"evict":""}" data-h="${h}">`;
-   if(x)t+=cardHTML(x.bird)+`<span class="ownchip">${meeple(S.players[x.owner].color,26,28)}</span><span class="yield">알 ${eggsOf(S.birds,x)} · ${FOODS[FSLOT[x.f]]}</span>`+(idle()?`<button class="ev red" data-e="${h}">내쫓기</button>`:"");
+   t+=`<div class="slot ${cls} ${x&&ev?"evict":""}" data-h="${h}">`;
+   if(x)t+=cardHTML(x.bird)+`<span class="ownchip">${meeple(S.players[x.owner].color,26,28)}</span><span class="yield">알 ${eggsOf(S.birds,x)}</span>`+(ev?`<button class="ev red" data-eh="${h}">내쫓기</button>`:"");
    else if(S.selH==h)t+=cardHTML(S.sel.b);
    t+="</div>"}
   t+="</div></div>"}
  $("#tree").innerHTML=t;
  document.querySelectorAll("#tree .slot.can").forEach(e=>e.onclick=()=>onHab(+e.dataset.h));
- document.querySelectorAll("[data-e]").forEach(e=>e.onclick=ev=>{ev.stopPropagation();const x=S.birds.find(y=>y.h==+e.dataset.e);
-  if(confirm(`${S.players[x.owner].name}의 ${BIRDS[x.bird][0]}을(를) 내쫓을까요? 이번 차례 행동을 모두 씁니다.`))evict(0,x)});
- // food board
  let fb="";for(let fd=0;fd<4;fd++){const ss=FSLOT.map((v,i)=>v==fd?i:-1).filter(i=>i>=0);
-  fb+=`<div class="fgrp"><div class="ttl">${fdot(fd,22)}${FOODS[fd]}<small>${ss.length}칸</small></div><div class="fslots">`;
-  ss.forEach(f=>{const x=S.birds.find(y=>y.f==f);fb+=`<div class="fslot ${foodOK.has(f)?"can":""}" data-f="${f}">${x?`<span class="chip"><svg class="b" viewBox="0 0 52 44">${birdG(x.bird,1.4,24,24)}</svg>${meeple(S.players[x.owner].color,14,16)}${BIRDS[x.bird][0]}</span>`:"빈 칸"}</div>`});
+  fb+=`<div class="fgrp"><div class="ttl">${fdot(fd,24)}${FOODS[fd]}<small>${ss.length}칸</small></div><div class="fslots">`;
+  ss.forEach(f=>{const x=S.birds.find(y=>y.f==f);
+   fb+=`<div class="fslot ${foodOK.has(f)?"can":""} ${x&&ev?"evict":""}" data-f="${f}">`+(x?`<span class="chip"><svg class="b" viewBox="0 0 64 46">${birdG(x.bird,1.9,x&&BIRDS[x.bird][3].climb?36:30,26)}</svg>${nm(x.bird)}<span class="who">${meeple(S.players[x.owner].color,13,15)}${S.players[x.owner].name}</span></span><span class="yield">알 ${eggsOf(S.birds,x)}</span>`+(ev?`<button class="ev red" data-ef="${f}">내쫓기</button>`:""):"빈 칸")+"</div>"});
   fb+="</div></div>"}
- $("#foods").innerHTML=fb;document.querySelectorAll(".fslot.can").forEach(e=>e.onclick=()=>onFood(+e.dataset.f));
- // piles
+ $("#foods").innerHTML=fb;document.querySelectorAll(".fslot.can").forEach(e=>e.onclick=()=>finishPick(S.selH,+e.dataset.f));
+ document.querySelectorAll("[data-eh]").forEach(e=>e.onclick=v=>{v.stopPropagation();askEvict(S.birds.find(y=>y.h==+e.dataset.eh))});
+ document.querySelectorAll("[data-ef]").forEach(e=>e.onclick=v=>{v.stopPropagation();askEvict(S.birds.find(y=>y.f==+e.dataset.ef))});
  const dk=$("#deck");dk.className="stack"+(idle()?" click":"");
  dk.innerHTML=S.deck.length?[...Array(Math.min(S.deck.length,5))].map((_,i)=>`<div class="back" style="top:${-i*2}px;left:${i}px">NICHE!</div>`).join("")+`<span class="cnt">${S.deck.length}</span>`:'<div style="color:#e9dfc888;font-size:12px;padding-top:56px;text-align:center">비어 있음</div>';
  dk.onclick=()=>$("#bDraw").onclick();
  $("#hawkDeck").innerHTML=[0,1,2,3].map(i=>`<div class="back hawk" style="top:${-i*2}px;left:${i}px">매</div>`).join("")+'<span class="cnt">4</span>';
- $("#endnote").innerHTML=S.lastRound?"<b>마지막 라운드</b><br>새 덱에서 뽑지 못해 이번 라운드가 끝나면 게임이 끝납니다.":"매에게 쫓긴 새는 <b>새 덱</b>으로 돌아갑니다.<br>새 덱에서 뽑지 못하면 그 라운드가 마지막입니다.";
+ $("#endnote").innerHTML=S.lastRound?"<b>마지막 라운드</b><br>새 덱에서 뽑지 못해 이번 라운드가 끝나면 게임이 끝납니다.":"매에게 쫓기거나 내쫓긴 새는 <b>새 덱</b>으로.<br>새 덱에서 뽑지 못하면 그 라운드가 마지막.";
  const mk=$("#market");mk.innerHTML=S.market.length?"":'<span class="empty">비어 있음</span>';
- S.market.forEach(b=>mk.insertAdjacentHTML("beforeend",cardHTML(b,(idle()?(canPlace(b)?"pick":"dead"):"")+(S.sel&&S.sel.b==b&&S.sel.from=="market"?" sel":""))));
- mk.querySelectorAll(".card.pick").forEach(e=>e.onclick=()=>{S.sel={b:+e.dataset.id,from:"market"};S.selH=null;render()});
- $("#trayTitle").textContent=cur().pc?`${cur().name}의 손 · 모두에게 공개`:"내 손 · 뽑은 카드";
- const tr=$("#tray");tr.innerHTML=S.drawn.length?"":`<span class="empty">${S.over?"":cur().pc?cur().name+"이(가) 행동을 고르는 중":"덱을 눌러 2장을 뽑거나, 버림 더미에서 1장을 고르세요"}</span>`;
- S.drawn.forEach(b=>tr.insertAdjacentHTML("beforeend",cardHTML(b,(cur().pc?"":canPlace(b)?"pick":"dead")+(S.sel&&S.sel.b==b&&S.sel.from=="drawn"?" sel":""))));
- tr.querySelectorAll(".card.pick").forEach(e=>e.onclick=()=>{if(!myTurn())return;S.sel={b:+e.dataset.id,from:"drawn"};S.selH=null;render()});
+ S.market.forEach(b=>mk.insertAdjacentHTML("beforeend",cardHTML(b,(myTurn()&&!S.drawn.length?(canPlace(b)?"pick":"dead"):"")+(S.sel&&S.sel.b==b&&S.sel.from=="market"?" sel":""))));
+ mk.querySelectorAll(".card.pick").forEach(e=>e.onclick=()=>{const b=+e.dataset.id;S.sel=S.sel&&S.sel.b==b?null:{b,from:"market"};S.selH=null;render()});
+ // tray: my hand + drawn (or PC's)
+ const P=cur(),showP=P.pc?P:S.players[0];
+ $("#trayTitle").textContent=P.pc?`${P.name}이(가) 뽑은 카드 · 모두에게 공개`:"내가 뽑은 카드";
+ const items=[];(P.pc||!S.over?S.drawn:[]).forEach(b=>items.push({b,from:"drawn"}));
+ const tr=$("#tray");tr.innerHTML=items.length?"":`<span class="empty">${S.over?"":P.pc?P.name+"이(가) 행동을 고르는 중":"덱을 눌러 2장을 뽑거나, 버림 더미에서 1장을 고르세요"}</span>`;
+ items.forEach(it=>{const pickable=myTurn()&&canPlace(it.b);
+  const sel=S.sel&&S.sel.b==it.b&&S.sel.from==it.from,kept=S.keep&&S.keep.b==it.b;
+  tr.insertAdjacentHTML("beforeend",`<div class="cwrap">${it.from=="hand"?'<span class="htag">손패</span>':""}${cardHTML(it.b,(P.pc?"":pickable?"pick":myTurn()?"dead":"")+(sel?" sel":""))}</div>`)});
+ tr.querySelectorAll(".card.pick").forEach(e=>e.onclick=()=>{const b=+e.dataset.id;S.sel=S.sel&&S.sel.b==b?null:{b,from:"drawn"};S.selH=null;render()});
+ 
  $("#bDraw").disabled=!idle();$("#bDraw").textContent=S.deck.length?"새 덱에서 2장 뽑기":"새 덱 비어 있음 (마지막 라운드 선언)";
- $("#bSkip").disabled=!(myTurn()&&S.drawn.length);$("#bCancel").disabled=!(myTurn()&&S.sel);
+ $("#bSkip").disabled=!(myTurn()&&S.drawn.length);
+ $("#bCancel").disabled=!(myTurn()&&S.sel);
  if(myTurn()){
-  if(S.sel&&S.selH!=null)setStatus(`${BIRDS[S.sel.b][0]}이(가) 먹을 먹이 칸을 고르세요`,"오른쪽 먹이 보드에서 빛나는 칸을 누르세요. 혼자 먹으면 알 2, 나눠 먹으면 알 1.");
-  else if(S.sel)setStatus(`${BIRDS[S.sel.b][0]}을(를) 앉힐 서식지 칸을 고르세요`,"서식지와 먹이 칸이 모두 비어 있어야 앉을 수 있습니다.");
-  else if(S.drawn.length)setStatus("뽑은 카드 중 1장을 고르세요","남은 카드는 공개된 버림 더미로 갑니다.");
-  else setStatus("내 차례 — 행동을 하나 고르세요","① 새 덱 2장 뽑기 &nbsp;② 버림 더미에서 1장 가져오기<br>③ 나무 위의 새에 마우스를 올려 <b>내쫓기</b>");
+  const me=S.players[0];
+  if(S.sel&&S.selH!=null)setStatus(`${nm(S.sel.b)}이(가) 먹을 먹이 칸을 고르세요`,"먹이 보드에서 빛나는 칸을 누르세요. 혼자 먹으면 알 2, 나눠 먹으면 알 1.");
+  else if(S.sel)setStatus(`${nm(S.sel.b)}을(를) 앉힐 서식지 칸을 고르세요`,"카드를 다시 누르거나 [선택 취소]로 취소할 수 있고, 선택 중에도 <b>내쫓기</b>를 누를 수 있습니다.");
+  else if(S.drawn.length)setStatus("앉힐 카드를 고르거나 내쫓으세요","남은 카드는 버림 더미로 갑니다. 지금 <b>내쫓기</b>를 하면 뽑은 카드는 새 덱으로 돌아가 섞입니다.");
+  else setStatus("내 차례 — 행동을 하나 고르세요","① 새 덱 2장 뽑기 &nbsp;② 버림 더미에서 1장 가져오기<br>③ 나무나 먹이 보드의 새에 마우스를 올려 <b>내쫓기</b>");
  }
 }
 
 /* ---------- PC ---------- */
 function next(){if(S.over)return;render();if(!cur().pc)return;
  S.busy=true;setStatus(`${cur().name}의 차례…`);render();setTimeout(()=>{S.busy=false;ai(S.turn)},900)}
-function best(b,pi){let r=null;const base=value(S.birds,pi);placements(b).forEach(o=>{const v=value([...S.birds,{bird:b,owner:pi,...o}],pi)-base;if(!r||v>r.v)r={...o,v,b}});return r}
-function ai(pi){const base=value(S.birds,pi),opts=[];
- S.market.forEach(b=>{const p=best(b,pi);if(p)opts.push({k:"m",...p})});
- if(S.deck.length){let tot=0,c=0;const d=S.deck,top=d.slice(-2);// PC는 덱 순서를 모르므로 남은 덱 전체에서 기댓값 계산
+function best(b,pi,birds=S.birds){let r=null;const base=value(birds,pi);placements(b,birds).forEach(o=>{const v=value([...birds,{bird:b,owner:pi,...o}],pi)-base;if(!r||v>r.v)r={...o,v,b}});return r}
+function ai(pi){const p=S.players[pi],base=value(S.birds,pi),opts=[];
+ S.market.forEach(b=>{const r=best(b,pi);if(r)opts.push({k:"m",...r})});
+ if(S.deck.length){let tot=0,c=0;const d=S.deck;
   for(let i=0;i<d.length;i++)for(let j=i+1;j<d.length;j++){const a=best(d[i],pi),b=best(d[j],pi);tot+=Math.max(0,a?a.v:0,b?b.v:0);c++}
-  opts.push({k:"d",v:(c?tot/c:Math.max(0,(best(d[0],pi)||{v:0}).v))-.1})}
- else opts.push({k:"d",v:-.5});
- S.birds.forEach(x=>opts.push({k:"e",x,v:value(S.birds.filter(y=>y!=x),pi)-base-.2}));
+  opts.push({k:"d",v:(c?tot/c:Math.max(0,(best(d[0],pi)||{v:0}).v))+.05})}else opts.push({k:"d",v:-.5});
+ S.birds.forEach(x=>{const rest=S.birds.filter(y=>y!=x);let v=value(rest,pi)-base-.25;opts.push({k:"e",x,v})});
  opts.forEach(o=>o.v+=Math.random()*.1);opts.sort((a,b)=>b.v-a.v);const o=opts[0];
- if(o.k=="m"){S.sel={b:o.b,from:"market"};setStatus(`${cur().name}: 버림 더미에서 ${BIRDS[o.b][0]}을(를) 가져갑니다`);render();
-  setTimeout(()=>{S.sel=null;S.market.splice(S.market.indexOf(o.b),1);log(`${cur().name}: 버림 더미에서 ${BIRDS[o.b][0]}을(를) 가져옴`);place(pi,o.b,o.h,o.f);endTurn()},1200)}
- else if(o.k=="e"){setStatus(`${cur().name}: ${S.players[o.x.owner].name}의 ${BIRDS[o.x.bird][0]}을(를) 내쫓습니다`);render();setTimeout(()=>evict(pi,o.x),1100)}
- else{if(!doDraw())return;setStatus(`${cur().name}: 새 덱에서 ${S.drawn.length}장을 뽑았습니다`);render();
-  setTimeout(()=>{let bb=null;S.drawn.forEach(b=>{const p=best(b,pi);if(p&&(!bb||p.v>bb.v))bb=p});
-   if(bb&&bb.v>-.2){S.sel={b:bb.b,from:"drawn"};setStatus(`${cur().name}: ${BIRDS[bb.b][0]}을(를) 고릅니다`);render();
-    setTimeout(()=>{S.sel=null;S.drawn.splice(S.drawn.indexOf(bb.b),1);place(pi,bb.b,bb.h,bb.f);endTurn()},1000)}
+ if(o.k=="m"||o.k=="h"){S.sel={b:o.b,from:o.k=="m"?"market":"hand"};setStatus(`${p.name}: ${o.k=="m"?"버림 더미에서":"손패의"} ${nm(o.b)}을(를) 앉힙니다`);render();
+  setTimeout(()=>{S.sel=null;takeCard(pi,o.b,o.k=="m"?"market":"hand");if(o.k=="m")log(`${p.name}: 버림 더미에서 ${nm(o.b)}을(를) 가져옴`);place(pi,o.b,o.h,o.f);endTurn()},1200)}
+ else if(o.k=="e"){setStatus(`${p.name}: ${S.players[o.x.owner].name}의 ${nm(o.x.bird)}을(를) 내쫓습니다`);render();setTimeout(()=>evict(pi,o.x),1100)}
+ else{if(!doDraw())return;setStatus(`${p.name}: 새 덱에서 ${S.drawn.length}장을 뽑았습니다`);render();
+  setTimeout(()=>{const pool=S.drawn.map(b=>({b,from:"drawn"}));
+   let bb=null;pool.forEach(it=>{const r=best(it.b,pi);if(r&&(!bb||r.v>bb.v))bb={...r,from:it.from}});
+   if(bb&&bb.v>-.2){S.sel={b:bb.b,from:bb.from};setStatus(`${p.name}: ${nm(bb.b)}을(를) 고릅니다`);render();
+    setTimeout(()=>{S.sel=null;takeCard(pi,bb.b,bb.from);place(pi,bb.b,bb.h,bb.f);endTurn()},1100)}
    else endTurn()},1500)}}
 
 /* ---------- round end ---------- */
