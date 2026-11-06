@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f7f7f4">
+<title>NICHE! 새들의 자리</title>
+<style>
+:root{--bg:#f7f7f4;--ink:#22302a;--sub:#6b736d;--card:#fffdf7;--line:#d9d6cb;--green:#2f4a36;--accent:#c89a3a;--red:#c8322e;
+--L0:#7fa86a;--L1:#a9c08a;--L2:#b48a5e;--L3:#7a5a3c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Noto Sans KR",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+header{max-width:980px;margin:0 auto;padding:18px 16px 6px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+header h1{margin:0;font-size:24px;font-weight:900;color:var(--green)}
+header span{color:var(--sub);font-size:14px}
+header a{margin-left:auto;color:var(--sub);font-size:13px}
+main{max-width:980px;margin:0 auto;padding:8px 16px 40px;display:grid;grid-template-columns:1fr 300px;gap:16px}
+@media(max-width:760px){main{grid-template-columns:1fr}}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
+#tree{display:grid;gap:8px}
+.layer{display:grid;grid-template-columns:64px 1fr 1fr;gap:8px;align-items:stretch;border-radius:10px;padding:6px;position:relative}
+.layer .lab{display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--green);gap:4px}
+.slot{min-height:96px;border:2px dashed #2f4a3655;border-radius:10px;background:#fffdf7aa;display:flex;align-items:center;justify-content:center;cursor:default;transition:.15s;position:relative;overflow:hidden}
+.slot.can{border-color:var(--accent);background:#fff6df;cursor:pointer;box-shadow:0 0 0 3px #c89a3a33}
+.slot.can:hover{transform:scale(1.02)}
+.layer.hit{animation:hit .9s}
+@keyframes hit{0%,100%{box-shadow:none}30%{box-shadow:0 0 0 4px var(--red) inset;background:#c8322e33}}
+.mini{width:100%;height:100%;display:flex;align-items:center;gap:6px;padding:6px;font-size:12px}
+.mini svg{flex:0 0 52px}
+.mini b{display:block;font-size:13px}
+.own{position:absolute;top:5px;right:5px;width:14px;height:14px;border-radius:50%;border:2px solid #fff}
+.egg{display:inline-block;font-size:11px;color:var(--sub)}
+#hand{display:flex;gap:8px;flex-wrap:wrap}
+.card{width:118px;border:2px solid var(--line);border-radius:10px;background:var(--card);padding:6px;cursor:pointer;transition:.15s;font-size:12px}
+.card:hover{transform:translateY(-2px)}
+.card.sel{border-color:var(--accent);box-shadow:0 0 0 3px #c89a3a44}
+.card b{font-size:14px;display:block}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.tag{font-size:11px;padding:1px 6px;border-radius:99px;background:#eee}
+.food{font-size:11px;padding:1px 6px;border-radius:99px;color:#fff}
+.f0{background:#6e9a3e}.f1{background:#5b5b6a}.f2{background:#b07a36}
+button{font:inherit;border:0;border-radius:10px;padding:9px 14px;background:var(--green);color:#fff;font-weight:700;cursor:pointer}
+button.ghost{background:#eee;color:var(--ink)}
+button:disabled{opacity:.4;cursor:default}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+h3{margin:0 0 8px;font-size:15px}
+.score{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #eee;font-size:14px}
+.score.turn{font-weight:800}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+#log{font-size:13px;line-height:1.55;max-height:280px;overflow:auto;color:#333}
+#log p{margin:0 0 4px}
+#log .r{color:var(--red);font-weight:700}
+#status{font-size:14px;margin:0 0 8px;min-height:20px;font-weight:600}
+#hawk{display:flex;align-items:center;gap:10px;background:#2a2f3a;color:#f2ede2;border-radius:12px;padding:10px;margin-top:10px;min-height:62px}
+#hawk small{color:#aab}
+.overlay{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px;z-index:9}
+.modal{background:#fff;border-radius:16px;padding:20px;max-width:440px;width:100%;line-height:1.6}
+.modal h2{margin:0 0 8px;color:var(--green)}
+.modal ul{padding-left:18px;margin:8px 0;font-size:14px}
+select{font:inherit;padding:6px;border-radius:8px}
+</style>
+</head>
+<body>
+<header><h1>NICHE!</h1><span>새들의 자리를 찾아라 · PC와 한 판</span><a href="/">← 새상청</a></header>
+<main>
+  <section>
+    <div class="panel"><div id="tree"></div>
+      <div id="hawk"><span style="font-size:13px">매 습격 대기 중 · 층마다 1/4 확률</span></div>
+    </div>
+    <div class="panel" style="margin-top:12px">
+      <p id="status"></p>
+      <div id="hand"></div>
+      <div class="row">
+        <button id="swap" class="ghost">선택한 카드 바꾸기</button>
+        <span style="font-size:12px;color:var(--sub)">카드를 고른 뒤 빛나는 칸을 누르면 앉힙니다</span>
+      </div>
+    </div>
+  </section>
+  <aside>
+    <div class="panel"><h3 id="rnd"></h3><div id="scores"></div></div>
+    <div class="panel" style="margin-top:12px"><h3>기록</h3><div id="log"></div></div>
+  </aside>
+</main>
+<div class="overlay" id="intro"><div class="modal">
+  <h2>NICHE! 새들의 자리를 찾아라</h2>
+  <ul>
+    <li>내 차례엔 <b>앉히기</b> 또는 <b>바꾸기</b> 하나만.</li>
+    <li>모두 한 번씩 하면 <b>매</b>가 한 층을 습격해 그 층 새가 떠납니다.</li>
+    <li>남은 새는 같은 먹이를 먹는 새가 <b>혼자면 알 2</b>, 겹치면 알 1.</li>
+    <li>5라운드 후 알이 가장 많으면 승리!</li>
+  </ul>
+  <div class="row">PC 수 <select id="npc"><option>1</option><option selected>2</option><option>3</option></select>
+  <button id="start">시작하기</button></div>
+</div></div>
+<script>
+const LAYERS=[["수관","var(--L0)"],["잔가지","var(--L1)"],["굵은 가지","var(--L2)"],["줄기","var(--L3)"]];
+const FOODS=["애벌레","곤충","씨앗"];
+const BIRDS=[
+["박새",[0,1],0,{body:"#9DB36A",belly:"#E9E2B5",head:"#222",cheek:"#fff",stripe:1}],
+["오목눈이",[0],0,{body:"#D9C3C8",belly:"#fff",head:"#f4f0ee",tail:2.2}],
+["곤줄박이",[1,2],2,{body:"#C46A3A",belly:"#D8844F",head:"#222",cheek:"#F1E3C2"}],
+["쇠박새",[1],2,{body:"#9C8E7C",belly:"#E8E0D2",head:"#1c1c1c"}],
+["어치",[0,2],2,{body:"#C9A58E",belly:"#E3CBB8",head:"#C9A58E",wing:"#3E6FB5"}],
+["동고비",[2,3],2,{body:"#7E93A8",belly:"#E9C9A0",head:"#7E93A8",eyestripe:1,climb:1}],
+["쇠딱다구리",[2,3],1,{body:"#6E5A48",belly:"#E8DDCF",head:"#6E5A48",bars:1,climb:1}],
+["청딱다구리",[2,3],1,{body:"#7E9A4E",belly:"#B9C49A",head:"#9AA0A0",climb:1}],
+["오색딱다구리",[3],1,{body:"#1E1E1E",belly:"#F2EFEA",head:"#1E1E1E",red:1,bars:1,climb:1}],
+["나무발발이",[3],1,{body:"#8A6E4E",belly:"#F4F1EA",head:"#8A6E4E",curve:1,climb:1,bars:1}]];
+const HAWKS=["새호리기","새매 (수컷)","새매 (암컷)","참매"];
+const COLORS=["#C8322E","#2F6DB5","#E0A92A","#7B4BA0"];
+const $=s=>document.querySelector(s);
+
+function birdSVG(i,w=52){const p=BIRDS[i][3],c=p.climb,t=p.tail||1;
+let g=`<g transform="translate(26,22) rotate(${c?-70:0}) scale(1.05)">`;
+g+=`<path d="M-6 1 L${-6-9*t} ${3+t} L${-6-9*t} ${5+t} L-5 4Z" fill="${p.body}" stroke="#2b2b2b" stroke-width=".4"/>`;
+g+=`<ellipse cx="0" cy="1" rx="8" ry="6" fill="${p.body}" stroke="#2b2b2b" stroke-width=".4"/><ellipse cx="1.5" cy="3" rx="5.5" ry="3.6" fill="${p.belly}"/>`;
+if(p.bars)for(let k=0;k<4;k++)g+=`<line x1="${-5+k*2}" y1="-3" x2="${-6+k*2}" y2="0" stroke="#fff" stroke-width=".7"/>`;
+if(p.wing)g+=`<rect x="-4" y="-1" width="5" height="2" fill="${p.wing}"/>`;
+if(p.stripe)g+=`<path d="M4 -2 L3 6" stroke="#222" stroke-width="1.2"/>`;
+if(p.red)g+=`<ellipse cx="-6" cy="4" rx="2" ry="1.4" fill="#C8322E"/>`;
+g+=`<circle cx="7" cy="-4" r="4.2" fill="${p.head}" stroke="#2b2b2b" stroke-width=".4"/>`;
+if(p.cheek)g+=`<ellipse cx="7.6" cy="-3.2" rx="2.3" ry="1.8" fill="${p.cheek}"/>`;
+if(p.eyestripe)g+=`<path d="M4 -4.6 L11 -4.2" stroke="#111" stroke-width=".8"/>`;
+g+=`<circle cx="8.8" cy="-4.6" r=".6" fill="#111"/>`;
+g+=p.curve?`<path d="M10.8 -4.4 Q14 -3.4 14.5 -1" stroke="#3a3a3a" fill="none" stroke-width=".7"/>`:`<path d="${c?'M10.8 -5 L15.5 -4.3 L10.8 -3.4Z':'M10.9 -4.8 L13.3 -4.1 L10.9 -3.4Z'}" fill="#3a3a3a"/>`;
+return `<svg viewBox="0 0 52 44" width="${w}">${c?'<rect x="31" y="0" width="12" height="44" fill="#8a6a4a" opacity=".35"/>':'<path d="M0 33 Q26 29 52 34" stroke="#7a5a3c" stroke-width="2" fill="none"/>'}${g}</g></svg>`}
+
+let S;
+function newGame(npc){
+  const deck=[];for(let i=0;i<10;i++)deck.push(i,i);shuffle(deck);
+  const players=[{name:"나",pc:false}];for(let i=1;i<=npc;i++)players.push({name:"PC "+i,pc:true});
+  players.forEach((p,i)=>{p.color=COLORS[i];p.eggs=0;p.hand=deck.splice(0,3)});
+  S={deck,discard:[],players,slots:Array(8).fill(null),round:1,start:0,turn:0,taken:0,sel:null,busy:false};
+  $("#log").innerHTML="";log("게임 시작! 시작 플레이어: 나");render();next();
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function draw(){if(!S.deck.length){S.deck=shuffle(S.discard);S.discard=[]}return S.deck.pop()}
+function log(t,c){$("#log").insertAdjacentHTML("afterbegin",`<p class="${c||''}">${t}</p>`)}
+const cur=()=>S.players[S.turn];
+const legal=b=>{const r=[];BIRDS[b][1].forEach(l=>{for(let k=0;k<2;k++)if(S.slots[l*2+k]==null)r.push(l*2+k)});return r};
+function eggsOf(slots,s){const b=slots[s].bird,f=BIRDS[b][2];return slots.filter(x=>x&&BIRDS[x.bird][2]==f).length==1?2:1}
+
+function render(){
+  const t=$("#tree");t.innerHTML="";
+  const me=!S.busy&&!cur().pc&&S.sel!=null?legal(cur().hand[S.sel]):[];
+  LAYERS.forEach(([n,c],l)=>{
+    const d=document.createElement("div");d.className="layer";d.id="L"+l;d.style.background=`color-mix(in srgb, ${c} 22%, transparent)`;
+    d.innerHTML=`<div class="lab">${n}</div>`;
+    for(let k=0;k<2;k++){const s=l*2+k,o=S.slots[s],e=document.createElement("div");e.className="slot"+(me.includes(s)?" can":"");
+      if(o){const b=BIRDS[o.bird];e.innerHTML=`<div class="mini">${birdSVG(o.bird)}<div><b>${b[0]}</b><span class="food f${b[2]}">${FOODS[b[2]]}</span><br><span class="egg">알 ${eggsOf(S.slots,s)}개 예상</span></div></div><span class="own" style="background:${S.players[o.owner].color}"></span>`}
+      if(me.includes(s))e.onclick=()=>place(S.turn,S.sel,s);
+      d.appendChild(e)}
+    t.appendChild(d)});
+  const me0=S.players[0],h=$("#hand");h.innerHTML="";
+  me0.hand.forEach((b,i)=>{const B=BIRDS[b],e=document.createElement("div");e.className="card"+(S.sel===i?" sel":"");
+    e.innerHTML=`${birdSVG(b,104)}<b>${B[0]}</b><div class="tags">${B[1].map(l=>`<span class="tag">${LAYERS[l][0]}</span>`).join("")}<span class="food f${B[2]}">${FOODS[B[2]]}</span></div>`;
+    e.onclick=()=>{if(S.busy||cur().pc)return;S.sel=S.sel===i?null:i;render()};h.appendChild(e)});
+  $("#swap").disabled=S.busy||cur().pc||S.sel==null;
+  $("#rnd").textContent=`라운드 ${Math.min(S.round,5)} / 5`;
+  $("#scores").innerHTML=S.players.map((p,i)=>`<div class="score ${i==S.turn&&!S.busy?'turn':''}"><span><span class="dot" style="background:${p.color}"></span>${p.name}</span><span>🥚 ${p.eggs} · 새 ${S.slots.filter(x=>x&&x.owner==i).length}</span></div>`).join("");
+}
+function endTurn(){S.sel=null;const p=cur();while(p.hand.length<3)p.hand.push(draw());S.taken++;
+  if(S.taken>=S.players.length){roundEnd();return}S.turn=(S.turn+1)%S.players.length;render();next()}
+function place(pi,hi,s){const p=S.players[pi],b=p.hand.splice(hi,1)[0];S.slots[s]={bird:b,owner:pi};log(`${p.name}: ${BIRDS[b][0]}을(를) ${LAYERS[s>>1][0]}에 앉힘`);endTurn()}
+function swap(pi,hi){const p=S.players[pi],b=p.hand.splice(hi,1)[0];S.discard.push(b);log(`${p.name}: ${BIRDS[b][0]} 카드를 바꿈`);endTurn()}
+$("#swap").onclick=()=>{if(S.sel!=null)swap(S.turn,S.sel)};
+
+function next(){const p=cur();
+  if(!p.pc){$("#status").textContent=legal(p.hand[0]).length+legal(p.hand[1]).length+legal(p.hand[2]).length?"내 차례: 카드를 고르세요":"내 차례: 앉힐 자리가 없어요. 카드를 바꾸세요";return}
+  S.busy=true;$("#status").textContent=`${p.name} 생각 중…`;render();
+  setTimeout(()=>{S.busy=false;ai(S.turn)},700)}
+function ai(pi){const p=S.players[pi];let best=null;
+  p.hand.forEach((b,hi)=>legal(b).forEach(s=>{
+    const before=S.slots.map((x,i)=>x?{...x,i}:null),after=S.slots.slice();after[s]={bird:b,owner:pi};
+    let v=0;after.forEach((x,i)=>{if(!x)return;const e=eggsOf(after,i)*0.75;v+=x.owner==pi?e:-e/(S.players.length-1)});
+    before.forEach((x,i)=>{if(!x)return;const e=eggsOf(S.slots,i)*0.75;v-=x.owner==pi?e:-e/(S.players.length-1)});
+    v+=Math.random()*0.2;if(!best||v>best.v)best={v,hi,s}}));
+  if(best&&best.v>0)place(pi,best.hi,best.s);
+  else{let w=0,ws=99;p.hand.forEach((b,i)=>{const n=legal(b).length;if(n<ws){ws=n;w=i}});swap(pi,w)}}
+
+function roundEnd(){S.busy=true;render();$("#status").textContent="매가 날아옵니다…";
+  setTimeout(()=>{const l=Math.random()*4|0,gone=[];
+    for(let k=0;k<2;k++){const o=S.slots[l*2+k];if(o){gone.push(BIRDS[o.bird][0]);S.discard.push(o.bird);S.slots[l*2+k]=null}}
+    $("#hawk").innerHTML=`<svg viewBox="-28 -10 56 28" width="64"><path d="M0 -4 C-8 -6 -18 -2 -27 4 C-18 2 -10 3 -4 4 L-3 13 L0 17 L3 13 L4 4 C10 3 18 2 27 4 C18 -2 8 -6 0 -4Z" fill="#E9E4D8"/><circle cx="0" cy="-6" r="3.2" fill="#E9E4D8"/></svg><div><b>${HAWKS[l]}</b> — ${LAYERS[l][0]} 습격!<br><small>${gone.length?gone.join(", ")+" 떠남":"이 층엔 새가 없었다"}</small></div>`;
+    log(`라운드 ${S.round} · ${HAWKS[l]}가 ${LAYERS[l][0]} 습격${gone.length?" → "+gone.join(", ")+" 떠남":""}`,"r");
+    render();document.getElementById("L"+l).classList.add("hit");
+    setTimeout(()=>{const g=S.players.map(()=>0);S.slots.forEach((x,i)=>{if(x)g[x.owner]+=eggsOf(S.slots,i)});
+      S.players.forEach((p,i)=>p.eggs+=g[i]);log("알 받기: "+S.players.map((p,i)=>`${p.name} +${g[i]}`).join(" · "));
+      if(S.round>=5){finish();return}
+      S.round++;S.start=(S.start+1)%S.players.length;S.turn=S.start;S.taken=0;S.busy=false;render();next()},1100)},800)}
+function finish(){render();const r=S.players.map((p,i)=>({...p,birds:S.slots.filter(x=>x&&x.owner==i).length})).sort((a,b)=>b.eggs-a.eggs||b.birds-a.birds);
+  const top=r.filter(p=>p.eggs==r[0].eggs&&p.birds==r[0].birds);
+  const msg=top.length>1?"공동 승리: "+top.map(p=>p.name).join(", "):(top[0].pc?top[0].name+" 승리!":"🎉 승리했어요!");
+  document.body.insertAdjacentHTML("beforeend",`<div class="overlay" id="end"><div class="modal"><h2>${msg}</h2><ul>${r.map(p=>`<li>${p.name}: 알 ${p.eggs}개 (새 ${p.birds}마리)</li>`).join("")}</ul><div class="row"><button onclick="document.getElementById('end').remove();newGame(S.players.length-1)">다시 하기</button></div></div></div>`)}
+$("#start").onclick=()=>{const n=+$("#npc").value;$("#intro").remove();newGame(n)};
+</script>
+</body>
+</html>

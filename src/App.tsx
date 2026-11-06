@@ -108,6 +108,20 @@ function Home({ onOpenCompass }: { onOpenCompass: () => void }) {
           </div>
         </button>
 
+        <a className="feature-card" href="/niche/" style={{ textDecoration: "none", color: "inherit" }}>
+          <div className="feature-card-top">
+            <span className="beta-pill">GAME</span>
+            <span aria-hidden="true">↗</span>
+          </div>
+          <div>
+            <h3>NICHE! 새들의 자리</h3>
+            <p>
+              나무에 새를 앉히고 매를 피해 알을 모으는
+              PC 대전 카드 게임입니다.
+            </p>
+          </div>
+        </a>
+
         <div className="future-card">
           <span>다른 기능도 준비 중입니다.</span>
         </div>
