@@ -326,7 +326,7 @@ function render(){
  if(myTurn()){
   const me=S.players[0];
   if(S.sel&&S.selH!=null)setStatus(`${nm(S.sel.b)}이(가) 먹을 먹이 칸을 고르세요`,"먹이 보드에서 빛나는 칸을 누르세요. 혼자 먹으면 알 2, 나눠 먹으면 알 1.");
-  else if(S.sel)setStatus(`${nm(S.sel.b)}을(를) 앉힐 서식지 칸을 고르세요`,"카드를 다시 누르거나 [선택 취소]로 취소할 수 있고, 선택 중에도 <b>내쫓기</b>를 누를 수 있습니다.");
+  else if(S.sel)setStatus(`${nm(S.sel.b)}을(를) 앉힐 서식지 칸을 고르세요`,"빈 곳을 누르거나 [선택 취소]로 취소할 수 있고, 선택 중에도 <b>내쫓기</b>를 누를 수 있습니다.");
   else if(S.drawn.length)setStatus("앉힐 카드를 고르거나 내쫓으세요","남은 카드는 버림 더미로 갑니다. 지금 <b>내쫓기</b>를 하면 뽑은 카드는 새 덱으로 돌아가 섞입니다.");
   else setStatus("내 차례 — 행동을 하나 고르세요","① 새 덱 2장 뽑기 &nbsp;② 버림 더미에서 1장 가져오기<br>③ 나무나 먹이 보드의 새에 마우스를 올려 <b>내쫓기</b>");
  }
@@ -369,6 +369,8 @@ function finish(){S.over=true;S.busy=false;render();setStatus("게임 종료");
  const top=r.filter(p=>p.eggs==r[0].eggs&&p.birds==r[0].birds);
  const msg=top.length>1?"공동 승리: "+top.map(p=>p.name).join(", "):top[0].pc?top[0].name+" 승리":"승리했습니다!";
  document.body.insertAdjacentHTML("beforeend",`<div class="overlay" id="end"><div class="sheet paper"><h2>${msg}</h2><div style="color:#6b5a3e">${S.round}라운드 진행</div><ol style="list-style:none;padding:0">${r.map(p=>`<li style="display:flex;align-items:center;gap:10px">${meeple(p.color)}<b>${p.name}</b> 알 ${p.eggs}개 · 새 ${p.birds}마리</li>`).join("")}</ol><button class="red" onclick="document.getElementById('end').remove();newGame(S.players.length-1)">다시 하기</button></div></div>`)}
+document.addEventListener("click",e=>{if(!S||!S.sel||!myTurn())return;const t=e.target;if(!t.isConnected)return;
+ if(t.closest(".card.pick,.slot.can,.fslot.can,button,.overlay"))return;S.sel=null;S.selH=null;render()});
 $("#start").onclick=()=>{const n=+$("#npc").value;$("#intro").remove();newGame(n)};
 </script>
 </body>
